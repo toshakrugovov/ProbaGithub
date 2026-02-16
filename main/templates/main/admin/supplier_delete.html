@@ -1,0 +1,25 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Удаление поставщика - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="confirm-wrap">
+    <div class="confirm-box">
+        <h1>⚠️ Удаление поставщика</h1>
+        <p>Вы уверены, что хотите удалить поставщика <strong>"{{ supplier.supplier_name }}"</strong>?</p>
+        <p class="form-error" style="font-weight: 600;">Это действие нельзя отменить!</p>
+        <form method="post" class="confirm-actions">
+            {% csrf_token %}
+            <button type="submit">Да, удалить</button>
+            <a href="{% url 'admin_suppliers_list' %}">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,207 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ошибка сервера - MPTCOURSE</title>
+    <!-- Google Fonts отключены из-за проблем с прокси -->
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <style>
+        .error-500-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 60px 20px;
+            text-align: center;
+            background: var(--bg);
+        }
+        
+        .error-500-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--elev);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .error-500-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .error-500-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+        
+        .error-500-message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        
+        .error-500-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .error-500-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #000000;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            border: 1px solid #000000;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        button.error-500-button {
+            width: 100%;
+        }
+        
+        .error-500-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            color: #ffffff;
+            background: #000000;
+        }
+        
+        .error-500-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+        }
+        
+        .dark-theme .error-500-button {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+        
+        .dark-theme .error-500-button:hover {
+            background: #ffffff;
+            color: #000000;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+        }
+        
+        .admin-button {
+            background: var(--btn-bg) !important;
+            border-color: var(--btn-bg) !important;
+            color: var(--btn-text) !important;
+        }
+        .admin-button:hover { opacity: 0.92; }
+        .dark-theme .admin-button {
+            background: var(--btn-bg) !important;
+            border-color: var(--btn-bg) !important;
+            color: var(--btn-text) !important;
+        }
+        .dark-theme .admin-button:hover { opacity: 0.92; }
+        
+        @media (max-width: 768px) {
+            .error-500-title {
+                font-size: 24px;
+            }
+            
+            .error-500-message {
+                font-size: 14px;
+            }
+            
+            .error-500-card {
+                padding: 24px;
+            }
+        }
+    </style>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDark = stored ? stored === 'dark' : prefersDark;
+                document.body.classList.toggle('dark-theme', isDark);
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body>
+    <div class="error-500-container">
+        <div class="error-500-card">
+            <div class="error-500-icon">⚠️</div>
+            <h1 class="error-500-title">Ошибка 500</h1>
+            <p class="error-500-message">
+                Произошла внутренняя ошибка сервера. Мы уже работаем над решением проблемы.
+            </p>
+            <div class="error-500-buttons">
+                <a href="/" class="error-500-button">Вернуться на главную</a>
+                <button type="button" class="error-500-button admin-button" id="adminButton">Если вы администратор</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Обработка клика на кнопку администратора
+        (function() {
+            function setupAdminButton() {
+                try {
+                    var adminButton = document.getElementById('adminButton');
+                    if (adminButton) {
+                        // Удаляем старые обработчики, если есть
+                        var newButton = adminButton.cloneNode(true);
+                        adminButton.parentNode.replaceChild(newButton, adminButton);
+                        
+                        // Добавляем новый обработчик
+                        newButton.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Переход на страницу администратора');
+                            window.location.href = '/admin-secret-check/';
+                        });
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('Ошибка при настройке кнопки администратора:', e);
+                }
+                return false;
+            }
+            
+            // Пытаемся сразу, если DOM уже загружен
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupAdminButton);
+            } else {
+                setupAdminButton();
+            }
+            
+            // Также настраиваем при загрузке страницы (на случай замены HTML)
+            window.addEventListener('load', setupAdminButton);
+            
+            // Используем делегирование событий для надежности
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.id === 'adminButton') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Переход на страницу администратора (делегирование)');
+                    window.location.href = '/admin-secret-check/';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

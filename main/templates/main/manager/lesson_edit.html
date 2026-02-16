@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_add %}Добавить урок{% else %}Редактировать урок{% endif %} — {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<style>
+.lesson-edit-header { margin-bottom: 24px; }
+.lesson-edit-header h1 { font-size: 22px; margin-bottom: 8px; }
+.page-slot { margin-bottom: 24px; padding: 16px; background: var(--surface, #f9f9f9); border-radius: 8px; border: 1px solid var(--border-color); }
+.page-slot h4 { font-size: 14px; margin: 0 0 12px; color: var(--text-color-secondary); }
+.page-slot label { display: block; margin-top: 8px; font-weight: 600; font-size: 13px; }
+.page-slot input[type="text"], .page-slot select, .page-slot textarea { width: 100%; max-width: 500px; padding: 8px; margin-top: 4px; }
+.page-slot textarea { min-height: 80px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <h1>{% if is_add %}Добавить урок{% else %}Редактировать урок{% endif %}</h1>
+    <div style="margin-bottom: 16px;">
+        <a href="{% url back_url_name course_id=course.id %}">← Назад к курсу</a>
+    </div>
+    <p style="margin-bottom: 24px; color: var(--text-color-secondary);">Урок может содержать до 10 страниц. На каждой странице: <strong>изображение</strong>, <strong>видео</strong> (YouTube/Rutube) или <strong>PDF</strong> и текст. Изображения и PDF задаются отдельно.</p>
+    <p style="margin-bottom: 16px; font-size: 13px; color: var(--text-color-secondary);">Загруженные файлы (фото и PDF) сохраняются в папку проекта <code>media/</code> и отображаются во встроенном просмотрщике.</p>
+
+    <form method="post" class="form-container" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="lesson_title">Название урока</label>
+            <input type="text" id="lesson_title" name="lesson_title" value="{{ lesson.title|default:'' }}" placeholder="Урок 1, Введение и т.д.">
+        </div>
+
+        <h2 style="font-size: 18px; margin: 28px 0 16px;">Страницы урока (до 10)</h2>
+        <div id="lesson-pages-container" data-max-pages="10" data-next-index="{{ page_slots|length }}">
+            {% for slot in page_slots %}
+            <div class="page-slot" data-slot-type="{{ slot.page_type|default:'image' }}">
+                <h4>Страница {{ forloop.counter }}</h4>
+                <label>Тип страницы</label>
+                <select name="page_{{ forloop.counter0 }}_type" class="page-type-select">
+                    <option value="image" {% if slot.page_type == 'image' or not slot.page_type %}selected{% endif %}>Изображение</option>
+                    <option value="video" {% if slot.page_type == 'video' %}selected{% endif %}>Видео (YouTube/Rutube)</option>
+                    <option value="pdf_page" {% if slot.page_type == 'pdf_page' %}selected{% endif %}>PDF</option>
+                </select>
+                <div class="page-type-fields page-type-image" style="{% if slot.page_type == 'video' or slot.page_type == 'pdf_page' %}display:none;{% endif %}">
+                    <label style="margin-top:12px;">Добавить ссылку на изображение</label>
+                    <input type="text" name="page_{{ forloop.counter0 }}_file_path" value="{{ slot.file_path|default:'' }}" placeholder="https://... или /media/..." class="page-file-path-input">
+                    <label style="margin-top:12px;">Загрузить файл</label>
+                    <input type="file" name="page_{{ forloop.counter0 }}_image_file" accept=".jpg,.jpeg,.png,.webp,.gif" class="lesson-upload-btn">
+                </div>
+                <div class="page-type-fields page-type-video" style="{% if slot.page_type != 'video' %}display:none;{% endif %}">
+                    <label style="margin-top:12px;">Ссылка на видео (YouTube или Rutube)</label>
+                    <input type="text" name="page_{{ forloop.counter0 }}_file_path" value="{{ slot.file_path|default:'' }}" placeholder="https://www.youtube.com/... или https://rutube.ru/..." class="page-file-path-input">
+                </div>
+                <div class="page-type-fields page-type-pdf_page" style="{% if slot.page_type != 'pdf_page' %}display:none;{% endif %}">
+                    <label style="margin-top:12px;">Загрузить файл PDF</label>
+                    <input type="file" name="page_{{ forloop.counter0 }}_pdf_file" accept=".pdf" class="lesson-upload-btn">
+                </div>
+                <label>Страницы PDF (одна или диапазон)</label>
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:6px;">
+                    <input type="number" name="page_{{ forloop.counter0 }}_page_number" value="{{ slot.page_number|default:'' }}" min="1" max="999" placeholder="Нач." style="width:80px;">
+                    <span>—</span>
+                    <input type="number" name="page_{{ forloop.counter0 }}_page_number_end" value="{{ slot.page_number_end|default:'' }}" min="1" max="999" placeholder="Конец (пусто = одна)">
+                </div>
+                <p style="font-size:12px;color:var(--text-color-secondary); margin-top:4px;">Одна страница: укажите только начальную. Диапазон: укажите начальную и конечную.</p>
+                <label>Текст страницы</label>
+                <textarea name="page_{{ forloop.counter0 }}_text" placeholder="Текст под медиа">{{ slot.text|default:'' }}</textarea>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="margin-top: 16px;">
+            <button type="button" id="add-page-btn" class="btn">{% if page_slots|length == 0 %}Добавить первую страницу{% else %}Добавить страницу{% endif %}</button>
+        </div>
+
+        <div style="margin-top: 24px;">
+            <button type="submit" class="btn btn-primary">{% if is_add %}Создать урок{% else %}Сохранить{% endif %}</button>
+            <a href="{% url back_url_name course_id=course.id %}" class="btn" style="margin-left: 12px;">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<script>
+(function() {
+    var container = document.getElementById('lesson-pages-container');
+    var addBtn = document.getElementById('add-page-btn');
+    if (!container || !addBtn) return;
+    var maxPages = parseInt(container.getAttribute('data-max-pages'), 10) || 10;
+    function getNextIndex() {
+        var n = parseInt(container.getAttribute('data-next-index'), 10) || 0;
+        return isNaN(n) ? 0 : n;
+    }
+    function setNextIndex(val) {
+        container.setAttribute('data-next-index', String(val));
+    }
+    function updateSlotVisibility(slotEl) {
+        var type = (slotEl.querySelector('.page-type-select') || {}).value || 'image';
+        slotEl.querySelectorAll('.page-type-fields').forEach(function(div) {
+            var show = div.classList.contains('page-type-' + type);
+            div.style.display = show ? '' : 'none';
+            var fp = div.querySelector('.page-file-path-input');
+            if (fp) fp.disabled = !show;
+        });
+    }
+    container.addEventListener('change', function(e) {
+        if (e.target && e.target.classList.contains('page-type-select')) {
+            updateSlotVisibility(e.target.closest('.page-slot'));
+        }
+    });
+    container.querySelectorAll('.page-slot').forEach(updateSlotVisibility);
+    function addPageSlot() {
+        var idx = getNextIndex();
+        if (idx >= maxPages) return;
+        var slot = document.createElement('div');
+        slot.className = 'page-slot';
+        slot.innerHTML =
+            '<h4>Страница ' + (idx + 1) + '</h4>' +
+            '<label>Тип страницы</label>' +
+            '<select name="page_' + idx + '_type" class="page-type-select">' +
+            '<option value="image" selected>Изображение</option>' +
+            '<option value="video">Видео (YouTube/Rutube)</option>' +
+            '<option value="pdf_page">PDF</option>' +
+            '</select>' +
+            '<div class="page-type-fields page-type-image">' +
+            '<label style="margin-top:12px;">Добавить ссылку на изображение</label>' +
+            '<input type="text" name="page_' + idx + '_file_path" value="" placeholder="https://... или /media/..." class="page-file-path-input">' +
+            '<label style="margin-top:12px;">Загрузить файл</label>' +
+            '<input type="file" name="page_' + idx + '_image_file" accept=".jpg,.jpeg,.png,.webp,.gif" class="lesson-upload-btn">' +
+            '</div>' +
+            '<div class="page-type-fields page-type-video" style="display:none;">' +
+            '<label style="margin-top:12px;">Ссылка на видео (YouTube или Rutube)</label>' +
+            '<input type="text" name="page_' + idx + '_file_path" value="" placeholder="https://www.youtube.com/... или https://rutube.ru/..." class="page-file-path-input" disabled>' +
+            '</div>' +
+            '<div class="page-type-fields page-type-pdf_page" style="display:none;">' +
+            '<label style="margin-top:12px;">Загрузить файл PDF</label>' +
+            '<input type="file" name="page_' + idx + '_pdf_file" accept=".pdf" class="lesson-upload-btn">' +
+            '</div>' +
+            '<label>Страницы PDF (одна или диапазон)</label>' +
+            '<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:6px;">' +
+            '<input type="number" name="page_' + idx + '_page_number" value="" min="1" max="999" placeholder="Нач." style="width:80px;">' +
+            '<span>—</span>' +
+            '<input type="number" name="page_' + idx + '_page_number_end" value="" min="1" max="999" placeholder="Конец (пусто = одна)">' +
+            '</div>' +
+            '<label>Текст страницы</label>' +
+            '<textarea name="page_' + idx + '_text" placeholder="Текст под медиа"></textarea>';
+        container.appendChild(slot);
+        updateSlotVisibility(slot);
+        setNextIndex(idx + 1);
+        if (idx === 0) addBtn.textContent = 'Добавить страницу';
+        if (getNextIndex() >= maxPages) addBtn.style.display = 'none';
+    }
+    addBtn.addEventListener('click', addPageSlot);
+    if (getNextIndex() >= maxPages) addBtn.style.display = 'none';
+})();
+</script>
+{% endblock %}

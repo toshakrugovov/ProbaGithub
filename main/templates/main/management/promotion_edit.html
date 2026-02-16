@@ -1,0 +1,61 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if promotion %}Редактирование{% else %}Добавление{% endif %} промокода{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+  <div class="form-container">
+    <h2>{% if promotion %}Редактирование{% else %}Добавление{% endif %} промокода</h2>
+    <form method="post">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label>Код промокода *</label>
+        <input type="text" name="promo_code" value="{{ promotion.promo_code|default:'' }}" required placeholder="SUMMER2024" style="text-transform:uppercase;">
+        <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Код будет автоматически преобразован в верхний регистр</div>
+      </div>
+
+      <div class="form-group">
+        <label>Описание</label>
+        <textarea name="promo_description" placeholder="Описание промокода...">{{ promotion.promo_description|default:'' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Скидка (%) *</label>
+        <input type="number" name="discount" value="{{ promotion.discount|default:0 }}" min="0" max="100" step="0.01" required>
+        <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Процент скидки от 0 до 100</div>
+      </div>
+
+      <div class="form-group">
+        <label>Дата начала действия</label>
+        <input type="date" name="start_date" value="{{ promotion.start_date|date:'Y-m-d'|default:'' }}">
+        <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Оставьте пустым, если промокод действует с момента создания</div>
+      </div>
+
+      <div class="form-group">
+        <label>Дата окончания действия</label>
+        <input type="date" name="end_date" value="{{ promotion.end_date|date:'Y-m-d'|default:'' }}">
+        <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Оставьте пустым, если промокод действует бессрочно</div>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="is_active" id="is_active" {% if not promotion or promotion.is_active %}checked{% endif %}>
+          Активен
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit">{% if promotion %}Сохранить{% else %}Создать{% endif %}</button>
+        <a href="{% url 'management_promotions_list' %}">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

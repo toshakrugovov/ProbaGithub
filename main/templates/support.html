@@ -1,0 +1,123 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Техническая поддержка - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/support.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="support-page">
+    <h1 class="support-title">Техническая поддержка</h1>
+    
+    <!-- Форма создания обращения -->
+    <div class="support-form-container">
+        <h2>Создать обращение</h2>
+        <form id="supportForm" onsubmit="createTicket(event)">
+            <div class="form-group">
+                <label for="ticketSubject">Тема обращения:</label>
+                <input type="text" id="ticketSubject" name="subject" required placeholder="Опишите проблему кратко">
+            </div>
+            
+            <div class="form-group">
+                <label for="ticketMessage">Сообщение:</label>
+                <textarea id="ticketMessage" name="message_text" rows="6" required placeholder="Опишите вашу проблему подробно..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn-submit">Отправить обращение</button>
+        </form>
+    </div>
+    
+    <!-- История обращений -->
+    <div class="tickets-container">
+        <h2>Мои обращения</h2>
+        {% if tickets %}
+        <div class="tickets-list">
+            {% for ticket in tickets %}
+            <div class="ticket-item">
+                <div class="ticket-header">
+                    <div class="ticket-info">
+                        <h3 class="ticket-subject">{{ ticket.subject }}</h3>
+                        <span class="ticket-date">{{ ticket.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <span class="ticket-status status-{{ ticket.ticket_status }}">{{ ticket.get_status_display|default:ticket.ticket_status }}</span>
+                </div>
+                <div class="ticket-message">
+                    <p>{{ ticket.message_text|truncatewords:30 }}</p>
+                </div>
+                {% if ticket.response_text %}
+                <div class="ticket-response">
+                    <strong>Ответ поддержки:</strong>
+                    <p>{{ ticket.response_text }}</p>
+                </div>
+                {% endif %}
+                <a href="{% url 'support_ticket_detail' ticket.id %}" class="btn-view">Подробнее</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-tickets">У вас пока нет обращений в поддержку</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function createTicket(event) {
+    event.preventDefault();
+    
+    const subject = document.getElementById("ticketSubject").value.trim();
+    const message = document.getElementById("ticketMessage").value.trim();
+    
+    if (!subject || !message) {
+        alert("Пожалуйста, заполните все поля");
+        return;
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if(document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for(let cookie of cookies){
+                cookie = cookie.trim();
+                if(cookie.startsWith(name + '=')){
+                    cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                    break;
+                }
+            }
+        }
+        if(!cookieValue){
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if(csrfInput) cookieValue = csrfInput.value;
+        }
+        return cookieValue;
+    }
+    
+    fetch("/api/support/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie('csrftoken')
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            subject: subject,
+            message_text: message
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert("Обращение создано! Мы свяжемся с вами в ближайшее время.");
+            document.getElementById("supportForm").reset();
+            location.reload();
+        } else {
+            alert("Ошибка: " + (data.error || data.message || "Не удалось создать обращение"));
+        }
+    })
+    .catch(() => alert("Ошибка при отправке обращения"));
+}
+</script>
+{% endblock %}
+

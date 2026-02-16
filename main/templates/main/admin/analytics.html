@@ -1,0 +1,426 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Аналитика - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Аналитика и отчёты</h1>
+        <div class="dashboard-actions">
+            <a href="{% url 'admin_dashboard' %}">← Назад</a>
+            <a href="{% url 'admin_analytics_export_csv' %}?type=sales">Экспорт CSV (Продажи)</a>
+            <a href="{% url 'admin_analytics_export_csv' %}?type=courses">Экспорт CSV (Курсы)</a>
+            <a href="{% url 'admin_analytics_export_csv' %}?type=users">Экспорт CSV (Пользователи)</a>
+            <a href="#" id="export-pdf-btn" onclick="exportPDFWithCharts(event); return false;">Экспорт PDF</a>
+        </div>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Заказов сегодня</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ orders_today }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Заказов за неделю</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ orders_week }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Заказов за месяц</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ orders_month }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Заказов за год</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ orders_year }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Выручка сегодня</h3>
+            <div class="value" style="font-size: 20px; font-weight: 600;">{{ revenue_today|floatformat:0 }} ₽</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Выручка за неделю</h3>
+            <div class="value" style="font-size: 20px; font-weight: 600;">{{ revenue_week|floatformat:0 }} ₽</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Выручка за месяц</h3>
+            <div class="value" style="font-size: 20px; font-weight: 600;">{{ revenue_month|floatformat:0 }} ₽</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Выручка за год</h3>
+            <div class="value" style="font-size: 20px; font-weight: 600;">{{ revenue_year|floatformat:0 }} ₽</div>
+        </div>
+        <div class="stat-card" style="padding: 16px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <h3 style="font-size: 12px; margin-bottom: 8px;">Налоги за месяц (13%)</h3>
+            <div class="value" style="font-size: 20px; font-weight: 600;">{{ total_tax_month|floatformat:0 }} ₽</div>
+        </div>
+        <div class="stat-card" style="padding: 16px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <h3 style="font-size: 12px; margin-bottom: 8px;">Налоги за год (13%)</h3>
+            <div class="value" style="font-size: 20px; font-weight: 600;">{{ total_tax_year|floatformat:0 }} ₽</div>
+        </div>
+        <div class="stat-card" style="padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3 style="font-size: 12px; margin-bottom: 8px;">Баланс организации</h3>
+            <div class="value" style="font-size: 20px; font-weight: 600;">{{ org_balance|floatformat:0 }} ₽</div>
+        </div>
+        <div class="stat-card" style="padding: 16px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <h3 style="font-size: 12px; margin-bottom: 8px;">Резерв на налоги</h3>
+            <div class="value" style="font-size: 20px; font-weight: 600;">{{ org_tax_reserve|floatformat:0 }} ₽</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Всего пользователей</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ total_users }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Активных</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ active_users }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Заблокированных</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ blocked_users }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Новых за месяц</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ new_users_month }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Всего курсов</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ total_products }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Доступных</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ available_products }}</div>
+        </div>
+        <div class="stat-card" style="padding: 16px;">
+            <h3 style="font-size: 12px; margin-bottom: 8px; color: var(--text-color-secondary);">Нет в наличии</h3>
+            <div class="value" style="font-size: 24px; font-weight: 600;">{{ out_of_stock }}</div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px;">
+        <div style="background: var(--bg-color); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <h3 style="margin: 0 0 16px 0; font-size: 18px;">Выручка по периодам</h3>
+            <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+        </div>
+        <div style="background: var(--bg-color); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <h3 style="margin: 0 0 16px 0; font-size: 18px;">Распределение пользователей</h3>
+            <canvas id="usersChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+
+    <div style="margin-top: 24px; background: var(--bg-color); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+        <h3 style="margin: 0 0 16px 0; font-size: 18px;">Статистика по категориям</h3>
+        <canvas id="categoriesChart" style="max-height: 400px;"></canvas>
+    </div>
+
+    {% if product_of_week %}
+    <div class="analytics-section">
+        <h2>🏆 Курс недели</h2>
+        <div class="analytics-item">
+            <div>
+                <strong>{{ product_of_week.title }}</strong>
+                <div style="font-size: 14px; color: var(--text-color-secondary); margin-top: 4px;">
+                    Продано: {{ product_of_week.total_sold|default:0 }} шт. | 
+                    Выручка: {{ product_of_week.total_revenue|default:0 }} ₽
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if product_of_month %}
+    <div class="analytics-section">
+        <h2>🏆 Курс месяца</h2>
+        <div class="analytics-item">
+            <div>
+                <strong>{{ product_of_month.title }}</strong>
+                <div style="font-size: 14px; color: var(--text-color-secondary); margin-top: 4px;">
+                    Продано: {{ product_of_month.total_sold|default:0 }} шт. | 
+                    Выручка: {{ product_of_month.total_revenue|default:0 }} ₽
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if popular_products %}
+    <div class="analytics-section">
+        <h2>Популярные курсы (за месяц)</h2>
+        {% for course in popular_products %}
+        <div class="analytics-item">
+            <div>
+                <strong>{{ course.title }}</strong>
+                <div style="font-size: 14px; color: var(--text-color-secondary); margin-top: 4px;">
+                    Продано: {{ course.total_sold|default:0 }} шт. | 
+                    Выручка: {{ course.total_revenue|default:0 }} ₽
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if active_users_list %}
+    <div class="analytics-section">
+        <h2>Активные пользователи (за месяц)</h2>
+        <div class="category-header">
+            <div>Пользователь</div>
+            <div>Заказов</div>
+            <div>Потрачено</div>
+        </div>
+        {% for user in active_users_list %}
+        <div class="category-item">
+            <div><strong>{{ user.username }}</strong></div>
+            <div>{{ user.total_orders|default:0 }}</div>
+            <div>{{ user.total_spent|default:0|floatformat:2 }} ₽</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if category_stats %}
+    <div class="analytics-section">
+        <h2>Статистика по категориям курсов</h2>
+        <div class="category-header">
+            <div>Категория</div>
+            <div>Курсов</div>
+            <div>Продано</div>
+            <div>Выручка</div>
+        </div>
+        {% for cat in category_stats %}
+        <div class="category-item">
+            <div><strong>{{ cat.category_name }}</strong></div>
+            <div>{{ cat.total_products|default:0 }}</div>
+            <div>{{ cat.total_sold|default:0 }} шт.</div>
+            <div>{{ cat.total_revenue|default:0 }} ₽</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Выручка по периодам (столбчатая диаграмма)
+const revenueCtx = document.getElementById('revenueChart');
+if (revenueCtx) {
+    new Chart(revenueCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Сегодня', 'Неделя', 'Месяц', 'Год'],
+            datasets: [{
+                label: 'Выручка (₽)',
+                data: [{{ revenue_today|floatformat:0 }}, {{ revenue_week|floatformat:0 }}, {{ revenue_month|floatformat:0 }}, {{ revenue_year|floatformat:0 }}],
+                backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(75, 192, 192, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(153, 102, 255, 0.6)'],
+                borderColor: ['rgba(54, 162, 235, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 206, 86, 1)', 'rgba(153, 102, 255, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('ru-RU') + ' ₽';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Распределение пользователей (круглая диаграмма)
+const usersCtx = document.getElementById('usersChart');
+if (usersCtx) {
+    new Chart(usersCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Активные', 'Заблокированные', 'Новые за месяц'],
+            datasets: [{
+                data: [{{ active_users }}, {{ blocked_users }}, {{ new_users_month }}],
+                backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(255, 99, 132, 0.6)', 'rgba(255, 206, 86, 0.6)'],
+                borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)', 'rgba(255, 206, 86, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Статистика по категориям (столбчатая диаграмма)
+const categoriesCtx = document.getElementById('categoriesChart');
+if (categoriesCtx && {{ category_stats|length }} > 0) {
+    const categoryLabels = [
+        {% for cat in category_stats %}
+        '{{ cat.category_name|escapejs }}'{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    const categoryRevenue = [
+        {% for cat in category_stats %}
+        {{ cat.total_revenue|default:0|floatformat:0 }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    new Chart(categoriesCtx, {
+        type: 'bar',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                label: 'Выручка (₽)',
+                data: categoryRevenue,
+                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('ru-RU') + ' ₽';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Функция для экспорта PDF с диаграммами
+function exportPDFWithCharts(event) {
+    event.preventDefault();
+    
+    // Показываем индикатор загрузки
+    const btn = document.getElementById('export-pdf-btn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Генерация PDF...';
+    btn.style.pointerEvents = 'none';
+    
+    // Функция для конвертации canvas в base64
+    function canvasToBase64(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            return null;
+        }
+        
+        try {
+            // Получаем Chart.js объект из canvas
+            const chart = Chart.getChart(canvas);
+            if (chart) {
+                // Используем метод toBase64Image() из Chart.js
+                return chart.toBase64Image();
+            } else {
+                // Если Chart.js объект не найден, используем стандартный метод
+                return canvas.toDataURL('image/png');
+            }
+        } catch (e) {
+            console.error('Ошибка конвертации canvas:', e);
+            // Fallback на стандартный метод
+            try {
+                return canvas.toDataURL('image/png');
+            } catch (e2) {
+                return null;
+            }
+        }
+    }
+    
+    // Конвертируем все диаграммы в base64
+    const revenueChart = canvasToBase64('revenueChart');
+    const usersChart = canvasToBase64('usersChart');
+    const categoriesChart = canvasToBase64('categoriesChart');
+    
+    // Создаем форму для отправки данных
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "admin_analytics_export_pdf" %}';
+    
+    // Добавляем CSRF токен
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    const csrfToken = getCookie('csrftoken');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+    }
+    
+    // Добавляем изображения диаграмм
+    if (revenueChart) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'revenue_chart';
+        input.value = revenueChart;
+        form.appendChild(input);
+    }
+    
+    if (usersChart) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'users_chart';
+        input.value = usersChart;
+        form.appendChild(input);
+    }
+    
+    if (categoriesChart) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'categories_chart';
+        input.value = categoriesChart;
+        form.appendChild(input);
+    }
+    
+    // Добавляем форму в документ и отправляем
+    document.body.appendChild(form);
+    form.submit();
+    
+    // Восстанавливаем кнопку через небольшую задержку
+    setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.pointerEvents = 'auto';
+        document.body.removeChild(form);
+    }, 2000);
+}
+</script>
+{% endblock %}
+

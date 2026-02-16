@@ -1,0 +1,48 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Лог #{{ log.id }} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="detail-wrap">
+    <div style="margin-bottom: 16px;">
+        <a href="{% url 'admin_activity_logs' %}" class="table-actions-header a">← Назад</a>
+    </div>
+
+    <div class="info-box">
+        <h2>Лог активности #{{ log.id }}</h2>
+        <div class="info-row">
+            <strong>Пользователь:</strong>
+            <span>{{ log.user.username|default:"Система" }} ({{ log.user.email|default:"-" }})</span>
+        </div>
+        <div class="info-row">
+            <strong>Тип действия:</strong>
+            <span>{{ log.action_type }}</span>
+        </div>
+        <div class="info-row">
+            <strong>Объект:</strong>
+            <span>{{ log.target_object }}</span>
+        </div>
+        <div class="info-row">
+            <strong>IP-адрес:</strong>
+            <span>{{ log.ip_address|default:"Не указан" }}</span>
+        </div>
+        <div class="info-row">
+            <strong>Дата и время:</strong>
+            <span>{{ log.created_at|date:"d.m.Y H:i:s" }}</span>
+        </div>
+        {% if log.action_description %}
+        <div class="info-row">
+            <strong>Описание:</strong>
+        </div>
+        <div class="description-box">{{ log.action_description }}</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

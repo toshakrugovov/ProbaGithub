@@ -1,0 +1,430 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Восстановление базы данных - MPTCOURSE</title>
+    <!-- Google Fonts отключены из-за проблем с прокси -->
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <style>
+        .restore-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 60px 20px;
+            text-align: center;
+            background: var(--bg);
+        }
+        
+        .restore-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--elev);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .restore-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .restore-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+        
+        .restore-message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        
+        .restore-form {
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 20px;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: var(--text);
+        }
+        
+        .file-input-label:hover {
+            border-color: var(--text);
+            background: var(--surface);
+        }
+        
+        .file-input-label.has-file {
+            border-color: var(--input-border);
+            background: var(--surface);
+        }
+        
+        .file-name {
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .restore-button {
+            width: 100%;
+            padding: 16px;
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #000000;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            margin-top: 20px;
+        }
+        
+        .restore-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        
+        .restore-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+        }
+        
+        .restore-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .dark-theme .restore-button {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+        
+        .dark-theme .restore-button:hover {
+            background: #ffffff;
+            color: #000000;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: left;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: left;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .info-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .info-box ul {
+            margin: 8px 0 0 20px;
+            padding: 0;
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--text);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .loading p {
+            margin-top: 16px;
+            color: var(--muted);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .restore-url {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text);
+            word-break: break-all;
+        }
+        
+        @media (max-width: 768px) {
+            .restore-title {
+                font-size: 24px;
+            }
+            
+            .restore-message {
+                font-size: 14px;
+            }
+            
+            .restore-card {
+                padding: 24px;
+            }
+        }
+    </style>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDark = stored ? stored === 'dark' : prefersDark;
+                document.body.classList.toggle('dark-theme', isDark);
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body>
+    <div class="restore-container">
+        <div class="restore-card">
+            <div class="restore-icon">🔧</div>
+            <h1 class="restore-title">База данных не найдена</h1>
+            <p class="restore-message">
+                Произошла ошибка: база данных была удалена или повреждена. 
+                Для восстановления работы сайта загрузите файл бэкапа базы данных.
+            </p>
+            
+            <div class="info-box">
+                <strong>ℹ️ Информация:</strong>
+                <ul>
+                    <li>Загрузите файл бэкапа базы данных (любой формат)</li>
+                    <li>Файл должен быть создан через систему бэкапов сайта</li>
+                    <li>После восстановления необходимо перезапустить сервер</li>
+                </ul>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                    <strong>📍 Ссылка для восстановления:</strong>
+                    <div class="restore-url">/emergency-restore/</div>
+                </div>
+            </div>
+            
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+            
+            <form class="restore-form" id="restoreForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="backup_file">Выберите файл бэкапа</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="backup_file" name="backup_file" class="file-input" accept=".sqlite3,.db,.bak,.sqlite,*" required>
+                        <label for="backup_file" class="file-input-label" id="fileLabel">
+                            📁 Нажмите для выбора файла или перетащите файл сюда
+                        </label>
+                        <div class="file-name" id="fileName" style="display: none;"></div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="restore-button" id="restoreButton">
+                    🔄 Восстановить базу данных
+                </button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>Восстановление базы данных...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('restoreForm');
+        const fileInput = document.getElementById('backup_file');
+        const fileLabel = document.getElementById('fileLabel');
+        const fileName = document.getElementById('fileName');
+        const restoreButton = document.getElementById('restoreButton');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const loading = document.getElementById('loading');
+        
+        // Обработка выбора файла
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Принимаем любые файлы бэкапов
+                
+                fileLabel.textContent = '✓ Файл выбран';
+                fileLabel.classList.add('has-file');
+                fileName.textContent = file.name;
+                fileName.style.display = 'block';
+                hideError();
+            }
+        });
+        
+        // Drag and drop
+        fileLabel.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileLabel.style.borderColor = 'var(--text)';
+        });
+        
+        fileLabel.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            fileLabel.style.borderColor = 'var(--border)';
+        });
+        
+        fileLabel.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+        
+        // Обработка отправки формы
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const file = fileInput.files[0];
+            if (!file) {
+                showError('Пожалуйста, выберите файл бэкапа');
+                return;
+            }
+            
+            // Принимаем любые файлы бэкапов
+            
+            // Показываем загрузку
+            restoreButton.disabled = true;
+            loading.style.display = 'block';
+            form.style.display = 'none';
+            hideError();
+            hideSuccess();
+            
+            // Создаем FormData
+            const formData = new FormData();
+            formData.append('backup_file', file);
+            
+            try {
+                const response = await fetch('/emergency-restore/', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(data.message || 'База данных успешно восстановлена!');
+                    // Перенаправляем на главную страницу через 1 секунду
+                    setTimeout(function() {
+                        window.location.href = data.redirect || '/';
+                    }, 1000);
+                } else {
+                    showError(data.error || 'Ошибка при восстановлении базы данных');
+                    form.style.display = 'block';
+                    restoreButton.disabled = false;
+                }
+            } catch (error) {
+                showError('Ошибка соединения: ' + error.message);
+                form.style.display = 'block';
+                restoreButton.disabled = false;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+        
+        function showError(message) {
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+        
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+        
+        function showSuccess(message) {
+            successMessage.textContent = '✅ ' + message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+        
+        function hideSuccess() {
+            successMessage.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+/* === Темы (ч/б по всему сайту) === */
+body.light {
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+    --surface: #ffffff;
+    --elev: rgba(0,0,0,0.1);
+    --card-bg: #ffffff;
+    --card-text: #1a1a1a;
+    --brand: #1a1a1a;
+    --brand-contrast: #ffffff;
+    --border: #1a1a1a;
+    --border-color: #1a1a1a;
+    /* Светлая тема: чёрные кнопки с белым текстом */
+    --btn-bg: #000000;
+    --btn-text: #ffffff;
+    --input-border: #000000;
+}
+body.dark, .dark-theme {
+    --bg-color: #0f0f10;
+    --text-color: #e6e6e6;
+    --surface: #151519;
+    --elev: rgba(0,0,0,0.4);
+    --card-bg: #2a2a2a;
+    --card-text: #e6e6e6;
+    --brand: #e6e6e6;
+    --brand-contrast: #0f0f10;
+    --border: #e6e6e6;
+    --border-color: #e6e6e6;
+    /* Тёмная тема: светлые кнопки с чёрным текстом */
+    --btn-bg: #ffffff;
+    --btn-text: #000000;
+    --input-border: #ffffff;
+}
+
+/* === Навигация === */
+.site-navbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+.site-navbar .logo { color: var(--text-color); }
+.nav-actions .icon-btn, .nav-actions .theme-toggle { color: var(--text-color); }
+
+/* === Hero section === */
+.hero {
+    background: #ffffff;
+    color: #1a1a1a;
+    padding: 80px 0;
+    text-align: center;
+    position: relative;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.autumn-hero {
+    background-image: url('../images/autumn_collection_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+/* Fallback если изображение не загружено */
+.autumn-hero:not([style*="background-image"]) {
+    background: linear-gradient(135deg, #8b4513 0%, #d2691e 50%, #cd853f 100%);
+}
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+.dark-theme .hero-overlay {
+    background: rgba(0, 0, 0, 0.6);
+}
+.hero .container {
+    position: relative;
+    z-index: 2;
+}
+.hero h1 { 
+    font-size: 48px; 
+    font-weight: 800; 
+    margin-bottom: 16px; 
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+}
+.dark-theme .hero h1 {
+    color: #ffffff;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+}
+.hero p { 
+    font-size: 18px; 
+    color: #ffffff;
+    margin-bottom: 32px;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+    font-weight: 400;
+}
+.dark-theme .hero p {
+    color: #ffffff;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+}
+.dark-theme .hero {
+    background: linear-gradient(135deg, #0f0f10 0%, #1b1b1f 100%);
+    color: #ffffff;
+}
+.dark-theme .autumn-hero {
+    background-image: url('../images/autumn_collection_bg.jpg');
+}
+.hero-buttons { 
+    display: flex; 
+    gap: 20px; 
+    justify-content: center; 
+    flex-wrap: wrap; 
+}
+
+/* Блок «Онлайн-курсы» — современный, в общей ч/б стилистике сайта */
+.hero-courses {
+    background: var(--bg-color);
+    color: var(--text-color);
+    padding: 56px 20px 72px;
+}
+.hero-courses-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 32px 36px;
+    border-radius: 18px;
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+    box-shadow: 0 14px 40px var(--elev);
+    text-align: left;
+}
+.hero-courses-title {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 8px 0 12px;
+    color: var(--text-color);
+}
+.hero-courses-lead {
+    font-size: 17px;
+    margin: 0 0 32px;
+    color: var(--text-color);
+    opacity: 0.9;
+}
+.hero-courses-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.hero-courses-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    align-items: center;
+}
+.hero-courses-cta {
+    display: inline-block;
+}
+@media (max-width: 768px) {
+    .hero {
+        padding: 60px 0;
+        min-height: 300px;
+    }
+    .autumn-hero {
+        background-attachment: scroll;
+    }
+    .hero h1 {
+        font-size: 32px;
+    }
+    .hero p {
+        font-size: 16px;
+    }
+    .hero-courses {
+        padding: 40px 16px 56px;
+    }
+    .hero-courses-inner {
+        padding: 24px 20px 28px;
+    }
+    .hero-courses-title {
+        font-size: 28px;
+    }
+    .hero-courses-lead {
+        font-size: 15px;
+        margin-bottom: 24px;
+    }
+}
+
+/* === Promo ticker === */
+section.promo-ticker,
+.promo-ticker {
+    background: #f5f5f5 !important;
+    background-color: #f5f5f5 !important;
+    color: #000 !important;
+    padding: 15px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    border-top: 1px solid #000 !important;
+    border-bottom: 1px solid #000 !important;
+}
+.dark-theme section.promo-ticker,
+.dark-theme .promo-ticker,
+body.dark section.promo-ticker,
+body.dark .promo-ticker,
+body.dark-theme section.promo-ticker,
+body.dark-theme .promo-ticker {
+    background: #1b1b1f !important;
+    background-color: #1b1b1f !important;
+    color: #fff !important;
+    border-top: 1px solid #ffffff !important;
+    border-bottom: 1px solid #ffffff !important;
+}
+.ticker-content { display: inline-block; padding-left: 100%; animation: ticker 30s linear infinite; }
+@keyframes ticker { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
+.promo-item { margin-right: 50px; font-weight: 500; }
+
+/* === Categories === */
+.categories { padding: 60px 0; background: var(--bg-color); }
+.section-title { text-align: center; font-size: 32px; font-weight: 700; margin-bottom: 50px; color: var(--text-color); }
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+.category-card {
+    background: #f8f8f8;
+    padding: 30px 20px;
+    text-align: center;
+    border-radius: 8px;
+    transition: all 0.3s;
+    text-decoration: none;
+    color: var(--text-color);
+}
+.dark-theme .category-card { background: #1b1b1f; color: #e6e6e6; }
+.category-card:hover { background: var(--brand); color: var(--brand-contrast); transform: translateY(-5px); }
+.dark-theme .category-card:hover { background: #2a2a31; }
+.category-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+
+/* === Products section === */
+.products-section {
+    padding: 60px 0;
+    background: var(--bg-color);
+}
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 25px;
+    justify-items: center;
+}
+.product-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px var(--elev);
+    transition: all 0.3s;
+    position: relative;
+    cursor: pointer;
+    max-width: 280px;
+    width: 100%;
+}
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px var(--elev);
+}
+.product-image {
+    width: 100%;
+    height: 300px;
+    background: #f7f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #666;
+}
+.dark-theme .product-image { background: #1b1b1f; color: #aaa; }
+.product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.product-card:hover .product-image img { transform: scale(1.05); }
+.product-info { padding: 20px; }
+.product-name { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-color); }
+.product-price { font-size: 18px; font-weight: 700; color: var(--text-color); margin-bottom: 10px; }
+.product-old-price { font-size: 14px; color: #999; text-decoration: line-through; margin-right: 10px; }
+.product-discount { background: #ff4444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.new-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--brand);
+    color: var(--brand-contrast);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* === Адаптивность === */
+@media (max-width: 768px) {
+    .hero {
+        padding: 50px 0;
+        min-height: 250px;
+    }
+    
+    .hero h1 { 
+        font-size: 28px; 
+        margin-bottom: 12px;
+    }
+    
+    .hero p {
+        font-size: 15px;
+        margin-bottom: 24px;
+    }
+    
+    .hero-buttons {
+        gap: 12px;
+    }
+    
+    .products-grid { 
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+        gap: 16px;
+    }
+    
+    .categories-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+    }
+    
+    .category-card {
+        padding: 20px 16px;
+    }
+    
+    .category-card h3 {
+        font-size: 16px;
+    }
+    
+    .section-title {
+        font-size: 24px;
+        margin-bottom: 30px;
+    }
+    
+    .products-section {
+        padding: 40px 0;
+    }
+    
+    .categories {
+        padding: 40px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        padding: 40px 0;
+        min-height: 200px;
+    }
+    
+    .hero h1 { 
+        font-size: 24px; 
+    }
+    
+    .hero p {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .hero-buttons .btn {
+        width: 100%;
+    }
+    
+    .products-grid { 
+        grid-template-columns: 1fr; 
+        gap: 12px;
+    }
+    
+    .categories-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .section-title {
+        font-size: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .product-card {
+        max-width: 100%;
+    }
+    
+    .product-image {
+        height: 250px;
+    }
+}

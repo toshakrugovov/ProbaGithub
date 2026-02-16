@@ -1,0 +1,158 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заказ #{{ order.id }} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="detail-wrap">
+    <div style="margin-bottom: 16px;">
+        <a href="{% url 'admin_orders_list' %}" class="table-actions-header a">← Назад</a>
+    </div>
+
+    <div class="info-box">
+        <h2>Заказ #{{ order.id }}</h2>
+        <div class="info-row">
+            <strong>Пользователь:</strong>
+            <span>{{ order.user.username|default:"Гость" }} ({{ order.user.email|default:"-" }})</span>
+        </div>
+        <div class="info-row">
+            <strong>Статус:</strong>
+            <span>{{ order.get_order_status_display }}</span>
+        </div>
+        <div class="info-row">
+            <strong>Сумма:</strong>
+            <span>{{ order.total_amount }} ₽</span>
+        </div>
+        <div class="info-row">
+            <strong>Дата:</strong>
+            <span>{{ order.created_at|date:"d.m.Y H:i" }}</span>
+        </div>
+        {% if order.address %}
+        <div class="info-row">
+            <strong>Адрес:</strong>
+            <span>{{ order.address.city_name }}, {{ order.address.street_name }} {{ order.address.house_number }}</span>
+        </div>
+        {% endif %}
+        {% if delivery %}
+        <div class="info-row">
+            <strong>Курьер:</strong>
+            <span>{{ delivery.carrier_name|default:"-" }}</span>
+        </div>
+        <div class="info-row">
+            <strong>Трек-номер:</strong>
+            <span>{{ delivery.tracking_number|default:"-" }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Товар</th>
+                <th>Размер</th>
+                <th>Количество</th>
+                <th>Цена</th>
+                <th>Итого</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item_data in items %}
+            <tr>
+                <td>{{ item_data.item.course.title|default:"Курс удалён" }}</td>
+                <td>{{ item_data.item.size.size_label|default:"-" }}</td>
+                <td>{{ item_data.item.quantity }}</td>
+                <td>{{ item_data.item.unit_price }} ₽</td>
+                <td>{{ item_data.total|floatformat:2 }} ₽</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form id="order-status-form" class="form-container">
+        {% csrf_token %}
+        <div id="form-error" style="color: var(--text-color); display: none; margin-bottom: 16px;"></div>
+        <h3 style="margin: 0 0 20px 0;">Изменить статус заказа</h3>
+        <div class="form-group">
+            <label for="order_status">Статус</label>
+            <select id="order_status" name="order_status" required>
+                {% for status_code, status_name in statuses %}
+                <option value="{{ status_code }}" {% if order.order_status == status_code %}selected{% endif %}>{{ status_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div id="delivery-fields" style="display: none;">
+            <div class="form-group">
+                <label for="carrier_name">Курьер</label>
+                <input type="text" id="carrier_name" name="carrier_name" value="{{ delivery.carrier_name|default:'' }}" placeholder="Название службы доставки">
+            </div>
+            <div class="form-group">
+                <label for="tracking_number">Трек-номер</label>
+                <input type="text" id="tracking_number" name="tracking_number" value="{{ delivery.tracking_number|default:'' }}" placeholder="Номер отслеживания">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" id="submit-btn">Сохранить</button>
+            <a href="{% url 'admin_orders_list' %}">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('order_status').addEventListener('change', function() {
+    const deliveryFields = document.getElementById('delivery-fields');
+    if (this.value === 'shipped') {
+        deliveryFields.style.display = 'block';
+    } else {
+        deliveryFields.style.display = 'none';
+    }
+});
+if (document.getElementById('order_status').value === 'shipped') {
+    document.getElementById('delivery-fields').style.display = 'block';
+}
+
+document.getElementById('order-status-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const errorDiv = document.getElementById('form-error');
+    const submitBtn = document.getElementById('submit-btn');
+    errorDiv.style.display = 'none';
+    
+    const data = {
+        status: document.getElementById('order_status').value
+    };
+    
+    const carrierName = document.getElementById('carrier_name').value.trim();
+    if (carrierName) {
+        data.carrier_name = carrierName;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Сохранение...';
+    
+    try {
+        const result = await ManagementAPI.orders.updateStatus({{ order.id }}, data);
+        
+        if (result.success) {
+            alert('Статус заказа обновлен');
+            location.reload();
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при обновлении статуса';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Сохранить';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Сохранить';
+    }
+});
+</script>
+{% endblock %}
+

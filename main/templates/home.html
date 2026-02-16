@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}MPTCOURSE - Онлайн-курсы{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Promo Ticker -->
+{% if promotions %}
+<section class="promo-ticker">
+    <div class="ticker-content">
+        {% for promo in promotions %}
+        <span class="promo-item">{{ promo.promo_code }} – Скидка {{ promo.discount }}%</span>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Hero: Онлайн-курсы (современный блок в стилистике сайта) -->
+<section class="hero-courses">
+    <div class="container">
+        <div class="hero-courses-inner">
+            <div class="hero-courses-label">Платформа MPTCOURSE</div>
+            <h1 class="hero-courses-title">Онлайн‑курсы для студентов</h1>
+            <p class="hero-courses-lead">
+                Короткие модули, понятные объяснения и задания, которые можно проходить в удобном темпе.
+            </p>
+            <div class="hero-courses-actions">
+                <a href="{% url 'catalog' %}" class="btn btn-primary hero-courses-cta">Смотреть каталог</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Promo Ticker between blocks -->
+<section class="promo-ticker">
+    <div class="ticker-content">
+        {% if promotions %}
+            {% for promo in promotions %}
+                <span class="promo-item">{{ promo.promo_code }} – Скидка {{ promo.discount }}%</span>
+            {% endfor %}
+        {% else %}
+            <span class="promo-item">Добро пожаловать в MPTCOURSE</span>
+            <span class="promo-item">Оплата картой, СБП или с баланса</span>
+        {% endif %}
+    </div>
+</section>
+
+<!-- New Products (курсы) -->
+{% if new_products %}
+<section class="products-section">
+    <div class="container">
+        <h2 class="section-title">Новинки</h2>
+        <div class="products-grid">
+            {% for product in new_products %}
+            <a href="{% url 'catalog' %}" class="product-card" style="text-decoration: none; color: inherit;">
+                <div class="product-image">
+                    {% if product.main_image_url %}
+                        <img src="{{ product.main_image_url }}" alt="{{ product.title }}">
+                    {% else %}
+                        Курс
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.title }}</h3>
+                    <div class="product-price">
+                        {% if product.discount and product.discount > 0 %}
+                            <span class="product-old-price">{{ product.price }} ₽</span>
+                            {{ product.final_price|floatformat:0 }} ₽
+                            <span class="product-discount">-{{ product.discount }}%</span>
+                        {% else %}
+                            {{ product.price }} ₽
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Popular Products (курсы) -->
+{% if popular_products %}
+<section class="products-section">
+    <div class="container">
+        <h2 class="section-title">Популярные курсы</h2>
+        <div class="products-grid">
+            {% for product in popular_products %}
+            <a href="{% url 'catalog' %}" class="product-card" style="text-decoration: none; color: inherit;">
+                <div class="product-image">
+                    {% if product.main_image_url %}
+                        <img src="{{ product.main_image_url }}" alt="{{ product.title }}">
+                    {% else %}
+                        Курс
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.title }}</h3>
+                    <div class="product-price">
+                        {% if product.discount and product.discount > 0 %}
+                            <span class="product-old-price">{{ product.price }} ₽</span>
+                            {{ product.final_price|floatformat:0 }} ₽
+                            <span class="product-discount">-{{ product.discount }}%</span>
+                        {% else %}
+                            {{ product.price }} ₽
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+{% endblock %}

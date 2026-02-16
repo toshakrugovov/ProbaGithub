@@ -1,0 +1,65 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заказы{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="table-wrap">
+  <div class="table-header">
+    <h1>Заказы</h1>
+    <div class="table-filters">
+      <form method="get">
+        <input type="text" name="q" value="{{ q }}" placeholder="Поиск по ID/логину/email">
+      </form>
+    </div>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Пользователь</th><th>Сумма</th><th>Статус</th><th>Создан</th><th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in page_obj.object_list %}
+      <tr>
+        <td>{{ o.id }}</td>
+        <td>{{ o.user.username|default:"-" }}</td>
+        <td>{{ o.total_amount }}</td>
+        <td>{{ o.order_status }}</td>
+        <td>{{ o.created_at|date:"d.m.Y H:i" }}</td>
+        <td class="table-actions">
+          <form method="post" action="{% url 'management_order_change_status' order_id=o.id %}" style="display: flex; gap: 8px; align-items: center;">
+            {% csrf_token %}
+            <select name="order_status" style="padding: 6px 10px;">
+              {% for key,label in o.ORDER_STATUSES %}
+                <option value="{{ key }}" {% if key == o.order_status %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" style="padding: 6px 10px;">Сохранить</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6">Нет заказов</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="pager" style="margin-top:10px;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}">← Назад</a>
+    {% else %}<span>← Назад</span>{% endif %}
+    <span>Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&q={{ q }}">Вперед →</a>
+    {% else %}<span>Вперед →</span>{% endif %}
+  </div>
+</div>
+{% endblock %}
+
+

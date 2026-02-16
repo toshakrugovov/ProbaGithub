@@ -1,0 +1,163 @@
+/* === Контейнер === */
+.profile-content {
+    display: flex;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+.profile-container {
+    width: 100%;
+    max-width: 500px;
+    background-color: var(--bg-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 40px 30px;
+}
+
+/* === Заголовок === */
+.profile-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+/* === Поля формы === */
+.profile-form .form-group {
+    margin-bottom: 18px;
+}
+
+.profile-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.profile-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: var(--input-bg, var(--bg-color));
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.profile-form input:focus {
+    outline: none;
+    border-color: var(--brand, var(--text-color));
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+}
+
+/* === Кнопки === */
+.profile-form button,
+.profile-form a.btn {
+    width: 100%;
+    padding: 10px 0;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    margin-top: 12px;
+    transition: all 0.2s ease;
+}
+
+/* Светлая тема кнопки */
+body.light .profile-form button,
+body.light .profile-form a.btn {
+    background-color: #ffffff;
+    color: #000000;
+    border-color: #000000;
+}
+
+/* Темная тема кнопки */
+.dark-theme .profile-form button,
+.dark-theme .profile-form a.btn,
+body.dark .profile-form button,
+body.dark .profile-form a.btn {
+    background-color: #000000;
+    color: #ffffff;
+    border-color: #ffffff;
+}
+
+.profile-form button:hover,
+.profile-form a.btn:hover {
+    filter: brightness(90%);
+    transform: translateY(-1px);
+}
+
+/* === Сообщения === */
+.error-message, .success-message {
+    display: none;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+    padding: 8px 10px;
+    border-radius: 6px;
+}
+
+.error-message.show {
+    display: block;
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.success-message.show {
+    display: block;
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* === Адаптивность === */
+@media (max-width: 768px) {
+    .profile-content {
+        padding: 50px 15px;
+    }
+    
+    .profile-container {
+        padding: 30px 20px;
+    }
+    
+    .profile-container h2 {
+        font-size: 22px;
+        margin-bottom: 24px;
+    }
+    
+    .profile-form .form-group {
+        margin-bottom: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-content {
+        padding: 40px 10px;
+    }
+    
+    .profile-container {
+        padding: 24px 16px;
+        border-radius: 8px;
+    }
+    
+    .profile-container h2 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .profile-form input {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .profile-form button,
+    .profile-form a.btn {
+        padding: 12px 0;
+        font-size: 14px;
+    }
+}
+

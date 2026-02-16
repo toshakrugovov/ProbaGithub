@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MPTCOURSE</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --surface: #ffffff;
+    --muted: #666666;
+    --border: #eaeaea;
+    --brand: #1a1a1a;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  /* Хедер */
+  .site-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+    height: 52px;
+    display: flex;
+    align-items: center;
+  }
+
+  body:not(.dark-theme) .site-navbar { border-bottom-color: #000000; }
+  .dark-theme .site-navbar { border-bottom-color: #ffffff; background: #1b1b1f; }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 0 20px;
+  }
+
+  .navbar-content {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: 52px;
+  }
+
+  .logo {
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 1.3rem;
+    justify-self: center;
+  }
+
+  .burger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.6rem;
+    color: var(--text);
+    justify-self: start;
+    padding: 4px;
+  }
+
+  .nav-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-self: end;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+
+  .icon-btn svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+  }
+
+  a.profile.icon-btn svg path:first-child,
+  a.profile.icon-btn svg circle {
+    stroke-width: 1.6;
+  }
+
+  /* Боковое меню */
+  .burger-menu {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 260px;
+    height: 100%;
+    background: var(--surface);
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+    transition: left 0.3s ease;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 9999;
+  }
+
+  .burger-menu.open {
+    left: 0;
+  }
+
+  .burger-menu ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .burger-menu li {
+    margin-bottom: 12px;
+  }
+
+  .burger-menu a {
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .burger-menu a:hover {
+    background: #000000;
+    color: #ffffff;
+  }
+
+  .close-btn {
+    font-size: 1.8rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<header class="site-navbar">
+  <div class="container">
+    <div class="navbar-content">
+      <button class="burger" aria-label="Меню" onclick="toggleBurgerMenu()">☰</button>
+
+      <a href="/" class="logo">MPTCOURSE</a>
+
+      <div class="nav-actions">
+        <button class="theme-toggle icon-btn" aria-label="Тема" title="Тема">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        {% if user.is_authenticated %}
+          <!-- Уведомления (колокольчик) -->
+          <a href="{% url 'notifications' %}" class="icon-btn" aria-label="Уведомления" title="Уведомления">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 7h18s-3 0-3-7z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+
+          <!-- Избранное -->
+          <a href="{% url 'favorites' %}" class="favorites icon-btn" aria-label="Избранное" title="Избранное">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+
+          <!-- Профиль -->
+          <a href="{% url 'profile' %}" class="profile icon-btn" aria-label="Профиль" title="Профиль">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z"
+                stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20 22v-2c0-2.21-3.58-4-8-4s-8 1.79-8 4v2"
+                stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+
+          <!-- Корзина -->
+          <a href="{% url 'cart' %}" class="cart icon-btn" aria-label="Корзина" title="Корзина">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 6h15l-1.5 9h-12z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 6l-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="9" cy="20" r="1" fill="currentColor"/>
+              <circle cx="18" cy="20" r="1" fill="currentColor"/>
+            </svg>
+          </a>
+        {% else %}
+          <!-- Неавторизованный пользователь -->
+          <a href="{% url 'login' %}?next={% url 'favorites' %}" class="favorites icon-btn" aria-label="Избранное" title="Войдите, чтобы добавить">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+
+          <a href="{% url 'login' %}?next={% url 'profile' %}" class="profile icon-btn" aria-label="Профиль" title="Войдите, чтобы открыть профиль">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z"
+                stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20 22v-2c0-2.21-3.58-4-8-4s-8 1.79-8 4v2"
+                stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+
+          <a href="{% url 'login' %}?next={% url 'cart' %}" class="cart icon-btn" aria-label="Корзина" title="Войдите, чтобы открыть корзину">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 6h15l-1.5 9h-12z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 6l-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="9" cy="20" r="1" fill="currentColor"/>
+              <circle cx="18" cy="20" r="1" fill="currentColor"/>
+            </svg>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <nav id="burgerMenu" class="burger-menu" aria-label="Главное меню">
+    <button class="close-btn" aria-label="Закрыть меню" onclick="toggleBurgerMenu()">×</button>
+    <ul class="burger-menu-list">
+      <li><a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">Главная</a></li>
+      <li><a href="{% url 'catalog' %}" class="{% if request.path|slice:':9' == '/catalog/' %}active{% endif %}">Каталог курсов</a></li>
+      <li><a href="{% url 'my_courses' %}" class="{% if request.path|slice:':15' == '/profile/my-courses' %}active{% endif %}">Мои курсы</a></li>
+      <li><a href="{% url 'about' %}" class="{% if request.path|slice:':7' == '/about/' %}active{% endif %}">О нас</a></li>
+      <li><a href="{% url 'delivery' %}" class="{% if request.path|slice:':10' == '/delivery/' %}active{% endif %}">Оплата</a></li>
+      <li><a href="{% url 'contacts' %}" class="{% if request.path|slice:':10' == '/contacts/' %}active{% endif %}">Контакты</a></li>
+    </ul>
+  </nav>
+</header>
+
+<script>
+  function toggleBurgerMenu() {
+    const menu = document.getElementById('burgerMenu');
+    menu.classList.toggle('open');
+  }
+
+  document.addEventListener('click', (event) => {
+    const menu = document.getElementById('burgerMenu');
+    const burger = document.querySelector('.burger');
+    if (!menu.contains(event.target) && !burger.contains(event.target)) {
+      menu.classList.remove('open');
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load course_media %}
+
+{% block title %}{{ lesson.title|default:"Урок" }} — {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+<style>
+.lesson-view-header { margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.lesson-view-header h1 { font-size: 22px; margin: 0; font-weight: 600; }
+.lesson-view-header .back-link { color: var(--text-color); text-decoration: none; font-size: 14px; }
+.lesson-view-header .back-link:hover { text-decoration: underline; }
+.lesson-page { max-width: 1200px; margin: 0 auto 32px; padding: 24px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; }
+.lesson-page-media { margin-bottom: 20px; text-align: center; }
+.lesson-page-media img { max-width: 100%; height: auto; border-radius: 8px; }
+.lesson-page-media embed { width: 100%; min-height: 70vh; border-radius: 8px; }
+.lesson-page-media .video-wrap { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16/9; min-height: 480px; border-radius: 8px; overflow: hidden; background: #000; }
+.lesson-page-media .video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 8px; }
+.lesson-page-text { font-size: 16px; line-height: 1.6; white-space: pre-wrap; }
+.lesson-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 28px; flex-wrap: wrap; }
+.lesson-nav .btn { padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 15px; border: 1px solid; cursor: pointer; }
+.lesson-nav .btn-prev, .lesson-nav .btn-next { background: var(--bg-color); color: var(--text-color); border-color: var(--border-color); }
+.lesson-nav .btn-prev:hover, .lesson-nav .btn-next:hover { background: var(--border-color); }
+.lesson-nav .btn-done { background: var(--text-color); color: var(--bg-color); border-color: var(--text-color); }
+.lesson-nav .btn-done:hover { opacity: 0.9; }
+.page-indicator { font-size: 14px; color: var(--text-color-secondary); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/pdf-viewer.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="profile-content">
+    <div class="orders-content" style="max-width: 1280px;">
+        <div class="lesson-view-header">
+            <div>
+                <a href="{% url 'course_lessons_list' purchase_id=purchase.id %}" class="back-link">← К списку уроков</a>
+                <h1>{{ lesson.title|default:"Урок" }}</h1>
+            </div>
+            <span class="page-indicator">Страница <span id="currentNum">1</span> из {{ pages|length|default:1 }}</span>
+        </div>
+
+        {% if pages %}
+        <div id="lessonPages">
+            {% for page in pages %}
+            <div class="lesson-page lesson-page-block" data-page-index="{{ forloop.counter0 }}" style="{% if not forloop.first %}display:none;{% endif %}">
+                <div class="lesson-page-media">
+                    {% if page.page_type == 'image' and page.file_path %}
+                    <img src="{% if page.file_path|is_local_course_media %}{% url 'serve_course_media' purchase_id=purchase.id %}?path={{ page.file_path|course_media_path|urlencode }}{% else %}{{ page.file_path }}{% endif %}" alt="Страница {{ forloop.counter }}">
+                    {% elif page.page_type == 'video' and page.file_path %}
+                    {% with embed_url=page.get_embed_url %}
+                    {% if embed_url and 'youtube.com/embed' in embed_url or 'rutube.ru/play/embed' in embed_url %}
+                    <div class="video-wrap">
+                        <iframe src="{{ embed_url }}" allow="clipboard-write; autoplay" allowfullscreen></iframe>
+                    </div>
+                    {% else %}
+                    <p><a href="{{ page.file_path }}" target="_blank" rel="noopener" class="btn btn-prev">Открыть видео</a></p>
+                    {% endif %}
+                    {% endwith %}
+                    {% elif page.page_type == 'pdf_page' and page.file_path %}
+                    <div class="pdf-viewer-container" data-pdf-url="{% if page.file_path|is_local_course_media %}{% url 'serve_course_media' purchase_id=purchase.id %}?path={{ page.file_path|course_media_path|urlencode }}{% else %}{{ page.file_path }}{% endif %}" data-pdf-page="{{ page.page_number|default:1 }}" data-pdf-page-end="{{ page.page_number_end|default:'' }}"></div>
+                    {% endif %}
+                </div>
+                {% if page.text %}
+                <div class="lesson-page-text">{{ page.text }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="lesson-nav">
+            <div>
+                <button type="button" id="btnPrev" class="btn btn-prev" style="display:none;">← Назад</button>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button type="button" id="btnNext" class="btn btn-next">Далее →</button>
+                <a href="{% url 'lesson_feedback' purchase_id=purchase.id lesson_id=lesson.id %}" id="btnDone" class="btn btn-done" style="display:none;">Я усвоил</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="lesson-page">
+            <p>В этом уроке пока нет страниц.</p>
+            <a href="{% url 'course_lessons_list' purchase_id=purchase.id %}" class="btn btn-prev">← К списку уроков</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if pages %}
+<script>
+(function() {
+    var blocks = document.querySelectorAll('.lesson-page-block');
+    var total = blocks.length;
+    var current = 0;
+    var btnPrev = document.getElementById('btnPrev');
+    var btnNext = document.getElementById('btnNext');
+    var btnDone = document.getElementById('btnDone');
+    var currentNum = document.getElementById('currentNum');
+
+    function showPage(index) {
+        current = index;
+        blocks.forEach(function(b, i) { b.style.display = i === index ? 'block' : 'none'; });
+        if (currentNum) currentNum.textContent = index + 1;
+        btnPrev.style.display = index > 0 ? 'inline-block' : 'none';
+        btnNext.style.display = index < total - 1 ? 'inline-block' : 'none';
+        btnDone.style.display = index === total - 1 ? 'inline-block' : 'none';
+    }
+
+    if (btnPrev) btnPrev.addEventListener('click', function() { if (current > 0) showPage(current - 1); });
+    if (btnNext) btnNext.addEventListener('click', function() { if (current < total - 1) showPage(current + 1); });
+    showPage(0);
+})();
+</script>
+{% endif %}
+{% endblock %}

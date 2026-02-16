@@ -1,0 +1,352 @@
+:root {
+  --bg: #ffffff;
+  --text: #1a1a1a;
+  --surface: #ffffff;
+  --muted: #666666;
+  --border: #eaeaea;
+  --footer-bg: #f8f8f8;
+  --footer-text: #1a1a1a;
+}
+
+/* ========== BASE ========== */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ========== HEADER ========== */
+.site-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+body:not(.dark-theme) .site-navbar {
+  border-bottom-color: var(--text);
+}
+
+.dark-theme .site-navbar {
+  background: var(--surface);
+  border-bottom-color: var(--text);
+}
+
+.navbar-content {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 52px;
+}
+
+.logo {
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--text);
+  justify-self: center;
+}
+
+.burger {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: var(--text);
+  cursor: pointer;
+  justify-self: start;
+  padding: 4px;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-self: end;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+}
+
+/* ========== BURGER MENU (в стилистике сайта: ч/б, активный пункт — чёрная кнопка с белым текстом) ========== */
+.burger-menu {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 260px;
+  max-width: 85vw;
+  height: 100%;
+  background: var(--bg-color, var(--surface));
+  border-right: 1px solid var(--border-color, var(--border));
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  transition: left 0.3s ease;
+  padding: 56px 16px 24px;
+  box-sizing: border-box;
+  z-index: 1100;
+  overflow-y: auto;
+}
+
+.dark-theme .burger-menu {
+  background: var(--bg-color);
+  border-right-color: var(--border-color);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+}
+
+.burger-menu.open {
+  left: 0;
+}
+
+.burger-menu ul.burger-menu-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.burger-menu li {
+  margin-bottom: 8px;
+}
+
+.burger-menu a {
+  display: block;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  color: var(--text-color, var(--text));
+  padding: 12px 14px;
+  border-radius: 8px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* Активный пункт: чёрная кнопка с белым текстом (как на референсе), в обеих темах */
+.burger-menu a.active {
+  background: #000000;
+  color: #ffffff;
+  border: none;
+}
+
+/* Hover: в светлой теме — чёрный фон и белый текст; в тёмной — тот же акцент */
+body:not(.dark-theme) .burger-menu a:hover {
+  background: #000;
+  color: #fff;
+}
+
+.dark-theme .burger-menu a:hover {
+  background: #000;
+  color: #fff;
+}
+
+.dark-theme .burger-menu a.active:hover {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+/* Кнопка закрытия — в цвет текста темы */
+.close-btn {
+  font-size: 1.75rem;
+  font-weight: 300;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  color: var(--text-color, var(--text));
+  padding: 8px;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  opacity: 0.8;
+}
+
+/* Затемнение фона при открытии меню */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+.overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ========== FOOTER ========== */
+.site-footer {
+  background: var(--footer-bg);
+  color: var(--footer-text);
+  padding: 60px 0 30px;
+  margin-top: 80px;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 40px;
+  margin-bottom: 40px;
+  padding: 0 20px;
+}
+
+.footer-col h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  color: #9a9aa0;
+}
+
+.footer-col p {
+  color: var(--muted);
+}
+
+.site-footer a {
+  color: var(--footer-text);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Light theme */
+body:not(.dark-theme) .site-footer .footer-col h3,
+body:not(.dark-theme) .site-footer .footer-col p {
+  color: #000 !important;
+}
+
+/* Dark theme */
+.dark-theme .site-footer {
+  background: #1b1b1f;
+  color: #fff;
+}
+
+.dark-theme .site-footer a {
+  color: #ccc;
+}
+
+.dark-theme .site-footer a:hover {
+  color: #fff;
+}
+
+/* Dark theme header icon overrides */
+.dark-theme .nav-actions .icon-btn,
+.dark-theme .nav-actions .icon-btn * {
+  color: #fff !important;
+}
+
+.dark-theme .nav-actions .icon-btn svg {
+  stroke: #fff !important;
+  fill: none;
+}
+
+.dark-theme .burger,
+.dark-theme .logo {
+  color: #fff !important;
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
+@media (max-width: 768px) {
+  .navbar-content {
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+  }
+  
+  .logo {
+    font-size: 1.1rem;
+    justify-self: center;
+  }
+  
+  .nav-actions {
+    gap: 8px;
+  }
+  
+  .icon-btn {
+    padding: 2px;
+  }
+  
+  .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .burger-menu {
+    width: 100%;
+    left: -100%;
+  }
+  
+  .burger-menu.open {
+    left: 0;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .site-footer {
+    padding: 40px 0 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 12px;
+  }
+  
+  .logo {
+    font-size: 1rem;
+  }
+  
+  .nav-actions {
+    gap: 6px;
+  }
+  
+  .icon-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .burger {
+    font-size: 1.4rem;
+  }
+  
+  .burger-menu {
+    padding: 50px 16px 16px;
+  }
+  
+  .burger-menu a {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+}

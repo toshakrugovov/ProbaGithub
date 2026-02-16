@@ -1,0 +1,129 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: mptcourse_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mptcourse}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-1}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mptcourse_network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mptcourse_web
+    command: gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 --access-logfile - --error-logfile - mptcourse.wsgi:application
+    volumes:
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+      # Для разработки: монтируем код для hot-reload
+      # Для продакшена: закомментируйте эту строку
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-mptcourse}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-1}
+      # InfluxDB настройки (подключение к InfluxDB в отдельном контейнере через Docker сеть)
+      - INFLUXDB_URL=${INFLUXDB_URL:-http://influx-db:8086}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-w2VtilYKU2XvyAcIEtBGAS2Lm8yNDDQH6rDP9CwL1mA6_Br82_gXNoVORzvh108qpaPWRvTdbJGktqYhjHUrKg==}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-MPT}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-Metrics}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mptcourse_network
+      - monitoring_system  # Подключение к сети InfluxDB
+
+  nginx:
+    image: nginx:alpine
+    container_name: mptcourse_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./staticfiles:/app/staticfiles:ro
+      - ./media:/app/media:ro
+    depends_on:
+      - web
+    networks:
+      - mptcourse_network
+
+  # Сервис для записи метрик в файл для Telegraf
+  metrics_writer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mptcourse_metrics_writer
+    command: python manage.py run_metrics_writer --interval 10 --output-file /tmp/metrics.out
+    volumes:
+      - .:/app
+      # Монтируем общую директорию для файла метрик (путь должен совпадать с Telegraf)
+      - C:/Users/anton/Desktop/INFLUXDB/metrics_data:/tmp
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-mptcourse}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-1}
+      - INFLUXDB_URL=${INFLUXDB_URL:-http://influx-db:8086}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-w2VtilYKU2XvyAcIEtBGAS2Lm8yNDDQH6rDP9CwL1mA6_Br82_gXNoVORzvh108qpaPWRvTdbJGktqYhjHUrKg==}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-MPT}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-Metrics}
+    depends_on:
+      - db
+      - web
+    networks:
+      - mptcourse_network
+      - monitoring_system
+    restart: unless-stopped
+
+  # InfluxDB для метрик (опционально - если хотите запускать в Docker)
+  # Раскомментируйте, если хотите использовать InfluxDB в Docker вместо хоста
+  # influxdb:
+  #   image: influxdb:2.7
+  #   container_name: mptcourse_influxdb
+  #   ports:
+  #     - "8086:8086"
+  #   environment:
+  #     - DOCKER_INFLUXDB_INIT_MODE=setup
+  #     - DOCKER_INFLUXDB_INIT_USERNAME=admin
+  #     - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+  #     - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-MPT}
+  #     - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-Metrics}
+  #     - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-}
+  #   volumes:
+  #     - influxdb_data:/var/lib/influxdb2
+  #   networks:
+  #     - mptcourse_network
+
+volumes:
+  postgres_data:
+  # influxdb_data:  # Раскомментируйте, если используете InfluxDB в Docker
+
+networks:
+  mptcourse_network:
+    driver: bridge
+  monitoring_system:
+    driver: bridge  # Создаем сеть автоматически, если не существует внешняя
+    external: false  # Изменено на false для автоматического создания
+

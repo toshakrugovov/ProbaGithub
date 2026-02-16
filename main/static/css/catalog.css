@@ -1,0 +1,807 @@
+/* === Общие стили === */
+body.light { --bg-color:#fff; --text-color:#000; --card-bg:#fff; --card-text:#000; --brand:#000; --brand-contrast:#fff; --border-color:#000; --input-border:#000; /* светлая тема: чёрные кнопки с белым текстом */ --btn-bg:#000; --btn-text:#fff; }
+body.dark, .dark-theme { --bg-color:#0f0f10; --text-color:#fff; --card-bg:#2a2a2a; --card-text:#fff; --brand:#fff; --brand-contrast:#000; --border-color:#fff; --input-border:#fff; /* тёмная тема: светлые кнопки с чёрным текстом */ --btn-bg:#fff; --btn-text:#000; }
+
+.catalog-filters, .products-section { padding-top: 120px; }
+
+.catalog-loading, .catalog-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-color-secondary, #666);
+}
+
+/* === Стили для фильтрации и поиска === */
+.filters-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.filters-form {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+}
+
+.custom-select {
+    padding: 12px 16px;
+    border: 2px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 180px;
+}
+
+.custom-select:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+}
+
+.btn-primary {
+    padding: 12px 24px;
+    background: var(--brand);
+    color: var(--brand-contrast);
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* === Стили для сетки товаров === */
+.products-grid { 
+    display:grid; 
+    grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); 
+    gap:25px; 
+    justify-items:center; 
+}
+
+.product-card { 
+    background-color:var(--card-bg); 
+    color:var(--card-text); 
+    border-radius:12px; 
+    overflow:hidden; 
+    cursor:pointer; 
+    transition:0.3s; 
+    max-width:280px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.product-card:hover { 
+    transform:translateY(-5px); 
+    box-shadow:0 10px 25px rgba(0,0,0,0.2); 
+}
+
+.product-image { 
+    width:100%; 
+    height:300px; 
+    display:flex; 
+    align-items:center; 
+    justify-content:center; 
+    background:#f7f7f7; 
+    position: relative;
+}
+
+.product-image img { 
+    width:100%; 
+    height:100%; 
+    object-fit:cover; 
+    transition:0.3s; 
+}
+
+.product-tags {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    z-index: 10;
+}
+
+.product-tag {
+    background: var(--brand);
+    color: var(--brand-contrast);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.product-card:hover .product-image img { 
+    transform:scale(1.05); 
+}
+
+.product-info {
+    padding: 15px;
+}
+
+.product-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: var(--card-text);
+}
+
+.product-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+.product-old-price {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+.product-discount {
+    background: var(--text-color);
+    color: var(--btn-text);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+    display: inline-block;
+}
+
+/* === Модальное окно === */
+.modal { 
+    display:none; 
+    position: fixed; 
+    z-index: 9999; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.5); 
+    backdrop-filter: blur(5px); 
+    justify-content: center; 
+    align-items: center;
+}
+
+.modal-content { 
+    background: transparent;
+    padding:20px; 
+    border-radius:16px; 
+    max-width:800px; 
+    width:85%; 
+    max-height:85vh;
+    overflow-y: auto;
+    display:flex; 
+    gap:20px; 
+    flex-wrap:wrap; 
+    border:1px solid rgba(255,255,255,0.35); 
+    position: relative; 
+    z-index: 10000;
+    box-shadow: none;
+}
+
+body.dark .modal-content,
+.dark-theme .modal-content { border-color: rgba(255,255,255,0.35); }
+
+.modal-close { 
+    position:absolute; 
+    top:10px; 
+    right:10px; 
+    font-size:32px; 
+    font-weight:bold; 
+    color:#fff; 
+    background:rgba(0,0,0,0.5);
+    width:40px;
+    height:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    cursor:pointer; 
+    transition: all 0.3s ease;
+    z-index: 10001;
+    line-height:1;
+    padding:0;
+}
+
+.modal-close:hover {
+    transform: scale(1.1);
+    background:rgba(231, 76, 60, 0.8);
+    color: #fff;
+}
+
+.modal-left { 
+    flex:1.2; 
+    min-width:250px; 
+    max-width:300px;
+    display:flex; 
+    flex-direction:column; 
+    gap:10px; 
+}
+
+.modal-main-image { 
+    width:100%; 
+    max-height:350px; 
+    object-fit:contain; 
+    border-radius:10px; 
+}
+
+.modal-image-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    background: transparent;
+}
+
+.modal-main-image {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    display: block;
+}
+
+.modal-image-wrapper.fade .modal-main-image {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.slider-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    opacity: 0;
+}
+
+.modal-image-wrapper:hover .slider-arrow {
+    opacity: 1;
+}
+
+.slider-arrow:hover {
+    background: rgba(0,0,0,0.65);
+    transform: translateY(-50%) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+.slider-arrow:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.slider-arrow.prev { 
+    left: 12px; 
+}
+
+.slider-arrow.next { 
+    right: 12px; 
+}
+
+.slider-arrow.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.modal-right { 
+    flex:1; 
+    min-width:250px; 
+    display:flex; 
+    flex-direction:column; 
+    gap:6px; 
+}
+
+.modal-right h2 { 
+    font-size:22px; 
+    font-weight:700; 
+    margin:0 0 4px 0; 
+    color: #fff;
+}
+
+.modal-right p { 
+    font-size:14px; 
+    margin:0; 
+    color: #fff;
+}
+
+.modal-buttons { 
+    display:flex; 
+    gap:8px; 
+    margin-top:8px;
+}
+
+.modal-buttons button { 
+    flex:1; 
+    padding:8px; 
+    border-radius:6px; 
+    font-weight:600; 
+    cursor:pointer; 
+    border:1px solid rgba(255,255,255,0.9); 
+    background: transparent;
+    color:#fff;
+    font-size:14px;
+    transition: all 0.3s ease;
+}
+
+.modal-buttons button:hover {
+    background:#fff;
+    color:#000;
+}
+
+.modal-sizes { 
+    margin-top:10px; 
+}
+
+.modal-sizes label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #fff;
+}
+
+body.dark .modal-sizes label,
+.dark-theme .modal-sizes label {
+    color: #fff;
+}
+
+.modal-sizes select { 
+    padding:8px 12px; 
+    border-radius:6px; 
+    border:1px solid #ccc; 
+    font-size:14px; 
+    width: 100%;
+    background: #fff;
+    color: #000;
+}
+
+.modal-thumbnails { 
+    display:flex; 
+    gap:8px; 
+    margin-top:10px; 
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.modal-thumbnails img { 
+    width:60px; 
+    height:60px; 
+    object-fit:contain; 
+    cursor:pointer; 
+    border:2px solid rgba(255,255,255,0.25); 
+    border-radius:8px; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    background: rgba(255,255,255,0.05);
+    padding: 4px;
+}
+
+body.dark .modal-thumbnails img,
+.dark-theme .modal-thumbnails img {
+    border:2px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+}
+
+.modal-thumbnails img:hover {
+    border-color: rgba(255,255,255,0.6);
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+body.dark .modal-thumbnails img:hover,
+.dark-theme .modal-thumbnails img:hover {
+    border-color: rgba(255,255,255,0.6);
+}
+
+.modal-thumbnails img.active { 
+    border:2px solid #fff; 
+    transform:scale(1.1);
+    background: rgba(255,255,255,0.15);
+}
+
+body.dark .modal-thumbnails img.active,
+.dark-theme .modal-thumbnails img.active {
+    border:2px solid #fff; 
+    background: rgba(255,255,255,0.2);
+}
+
+.size-warning { 
+    color: var(--text-color); 
+    font-weight: bold; 
+    margin-top:5px; 
+    display:none;
+}
+
+/* === Секция отзывов === */
+.modal-reviews {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+body.dark .modal-reviews,
+.dark-theme .modal-reviews { border-top-color: rgba(255,255,255,0.2); }
+
+.modal-reviews h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.reviews-summary {
+    margin-bottom: 20px;
+}
+
+.rating-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.avg-rating {
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.stars {
+    display: flex;
+    gap: 2px;
+}
+
+.star-filled {
+    color: #ffc107;
+    font-size: 18px;
+}
+
+.star-empty {
+    color: #ddd;
+    font-size: 18px;
+}
+
+.reviews-count {
+    color: rgba(255,255,255,0.8);
+    font-size: 14px;
+}
+
+body.dark .reviews-count,
+.dark-theme .reviews-count { color: rgba(255,255,255,0.8); }
+
+/* Форма отзыва */
+.review-form-container {
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+.review-form-container h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.rating-input {
+    margin-bottom: 15px;
+}
+
+.rating-input label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.stars-input {
+    display: flex;
+    gap: 5px;
+}
+
+.stars-input .star {
+    font-size: 24px;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stars-input .star:hover,
+.stars-input .star.active {
+    color: #ffc107;
+    transform: scale(1.1);
+}
+
+.review-text-input {
+    margin-bottom: 15px;
+}
+
+.review-text-input label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.review-text-input textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    resize: vertical;
+    font-family: inherit;
+}
+
+.review-text-input textarea:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+}
+
+.btn-submit-review {
+    padding: 10px 20px;
+    background: var(--brand);
+    color: var(--brand-contrast);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-submit-review:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.login-prompt {
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+    font-style: italic;
+    margin: 20px 0;
+}
+
+/* Список отзывов */
+.reviews-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.loading-reviews,
+.no-reviews {
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+    padding: 20px;
+    font-style: italic;
+}
+
+body.dark .loading-reviews,
+body.dark .no-reviews,
+.dark-theme .loading-reviews,
+.dark-theme .no-reviews { color: rgba(255,255,255,0.7); }
+
+.review-item {
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+body.dark .review-item,
+.dark-theme .review-item { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.review-author { font-weight: 600; color: #fff; }
+
+.review-rating {
+    color: #ffc107;
+    font-size: 14px;
+}
+
+.review-date {
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    margin-left: auto;
+}
+
+body.dark .review-date,
+.dark-theme .review-date { color: rgba(255,255,255,0.6); }
+
+.review-text {
+    color: #fff;
+    line-height: 1.6;
+    margin-top: 10px;
+}
+
+body.dark .review-text,
+.dark-theme .review-text { color: #fff; }
+
+.reviews-more {
+    text-align: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color, #ddd);
+}
+
+.btn-more-reviews {
+    display: inline-block;
+    padding: 8px 12px;
+    border: 1px solid rgba(255,255,255,0.9);
+    background: transparent;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-more-reviews:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* === Адаптивность модального окна === */
+@media (max-width: 1024px) {
+    .modal-content {
+        flex-direction: column;
+        max-height: 90vh;
+        overflow-y: auto;
+        max-width: 700px;
+    }
+    
+    .modal-left {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    .modal-right {
+        min-width: 100%;
+    }
+    
+    .modal-main-image {
+        max-height: 300px;
+    }
+    
+    .modal-reviews {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .filters-form {
+        flex-direction: column;
+    }
+    
+    .search-input,
+    .custom-select {
+        width: 100%;
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+        max-height: 95vh;
+        max-width: 95%;
+    }
+    
+    .modal-close {
+        top: 5px;
+        right: 5px;
+        width: 35px;
+        height: 35px;
+        font-size: 28px;
+    }
+    
+    .modal-left {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    .modal-right {
+        min-width: 100%;
+    }
+    
+    .modal-main-image {
+        max-height: 250px;
+    }
+    
+    .modal-thumbnails {
+        flex-wrap: wrap;
+    }
+    
+    .modal-thumbnails img {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+    }
+    
+    .modal-buttons button {
+        width: 100%;
+    }
+    
+    .review-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .review-date {
+        margin-left: 0;
+    }
+    
+    .reviews-list {
+        max-height: 300px;
+    }
+}
+
+/* Кастомная полоса прокрутки внутри модалки */
+.modal-content::-webkit-scrollbar { width: 8px; }
+.modal-content::-webkit-scrollbar-track { background: transparent; }
+.modal-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 8px; }
+.modal-content::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+

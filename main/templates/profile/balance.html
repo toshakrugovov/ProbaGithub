@@ -1,0 +1,430 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мой баланс - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+/* === Контейнер баланса === */
+.balance-content {
+    padding: 60px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.balance-header {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.balance-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.balance-header a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.balance-header a:hover {
+    text-decoration: underline;
+}
+
+/* === Текущий баланс === */
+.balance-card {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Светлая тема: черные грани */
+body:not(.dark-theme) .balance-card {
+    border: 1px solid #000;
+    background-color: #fff;
+}
+
+.balance-label {
+    font-size: 16px;
+    color: var(--text-color-secondary);
+    margin-bottom: 12px;
+}
+
+.balance-amount {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 20px;
+}
+
+/* === Формы пополнения и вывода === */
+.balance-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 80px;
+    align-items: stretch;
+}
+
+.balance-form-card {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+/* Светлая тема: черные грани */
+body:not(.dark-theme) .balance-form-card {
+    border: 1px solid #000;
+    background-color: #fff;
+}
+
+.balance-form-card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+
+.balance-form-card form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.balance-form-card .empty-state {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-between;
+}
+
+.balance-form-card .empty-state p {
+    color: var(--text-color-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+    flex: 1;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.balance-form-card form .form-group:last-of-type {
+    margin-bottom: 20px;
+}
+
+.balance-form-card form button {
+    margin-top: auto;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-color);
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: border-color 0.2s ease;
+}
+
+/* Светлая тема: черные грани для полей ввода */
+body:not(.dark-theme) .form-group input,
+body:not(.dark-theme) .form-group select {
+    border: 1px solid #000;
+    background-color: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--text-color);
+}
+
+.btn {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+    border: 1px solid;
+    cursor: pointer;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.btn-primary {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    border-color: var(--text-color);
+}
+
+.btn-primary:hover {
+    filter: brightness(90%);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+}
+
+/* Светлая тема: черные грани для кнопок */
+body:not(.dark-theme) .btn-secondary {
+    border: 1px solid #000;
+    background-color: #fff;
+    color: #000;
+}
+
+body:not(.dark-theme) .btn-secondary:hover {
+    background-color: #000;
+    color: #fff;
+}
+
+/* === История транзакций === */
+.transactions-section {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 40px;
+}
+
+/* Светлая тема: черные грани */
+body:not(.dark-theme) .transactions-section {
+    border: 1px solid #000;
+    background-color: #fff;
+}
+
+.transactions-section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.transactions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-info {
+    flex: 1;
+}
+
+.transaction-type {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.transaction-description {
+    font-size: 12px;
+    color: var(--text-color-secondary);
+}
+
+.transaction-date {
+    font-size: 12px;
+    color: var(--text-color-secondary);
+    margin-top: 4px;
+}
+
+.transaction-amount {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.transaction-amount.positive,
+.transaction-amount.negative {
+    color: var(--text);
+}
+
+.empty-transactions {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-color-secondary);
+}
+
+/* Темная тема */
+.dark-theme .balance-card,
+.dark-theme .balance-form-card,
+.dark-theme .transactions-section {
+    background-color: #1a1a1a;
+    border-color: #333;
+}
+
+.dark-theme .form-group input {
+    background-color: #1a1a1a;
+    border-color: #333;
+}
+
+.dark-theme .form-group input:focus {
+    border-color: #fff;
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+    .balance-content {
+        padding: 40px 15px;
+    }
+    
+    .balance-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .transaction-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="balance-content">
+    <div class="balance-header">
+        <h1>Мой баланс</h1>
+        <a href="{% url 'profile' %}">← Вернуться в профиль</a>
+    </div>
+
+    <!-- Текущий баланс -->
+    <div class="balance-card">
+        <div class="balance-label">Текущий баланс</div>
+        <div class="balance-amount">{{ profile.balance }} ₽</div>
+    </div>
+
+    <!-- Формы пополнения и вывода -->
+    <div class="balance-actions">
+        <!-- Пополнение -->
+        <div class="balance-form-card">
+            <h2>Пополнить баланс</h2>
+            {% if saved_payments %}
+            <form method="post" action="{% url 'deposit_balance' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="deposit_card_id">Выберите карту *</label>
+                    <select id="deposit_card_id" name="card_id" required>
+                        <option value="">-- Выберите карту --</option>
+                        {% for payment in saved_payments %}
+                        <option value="{{ payment.id }}">{{ payment.card_type|upper|default:"CARD" }} {{ payment.mask_card_number }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="deposit_amount">Сумма пополнения (₽)</label>
+                    <input type="number" id="deposit_amount" name="amount" min="1" step="0.01" required placeholder="1000">
+                </div>
+                <button type="submit" class="btn btn-primary">Пополнить</button>
+            </form>
+            {% else %}
+            <div class="empty-state">
+                <p>Для пополнения баланса необходимо добавить карту.</p>
+                <a href="{% url 'payment_methods' %}" class="btn btn-primary">Добавить карту</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Вывод -->
+        <div class="balance-form-card">
+            <h2>Вывести средства</h2>
+            {% if saved_payments %}
+            <form method="post" action="{% url 'withdraw_balance' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="withdraw_card_id">Выберите карту *</label>
+                    <select id="withdraw_card_id" name="card_id" required>
+                        <option value="">-- Выберите карту --</option>
+                        {% for payment in saved_payments %}
+                        <option value="{{ payment.id }}">{{ payment.card_type|upper|default:"CARD" }} {{ payment.mask_card_number }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="withdraw_amount">Сумма вывода (₽)</label>
+                    <input type="number" id="withdraw_amount" name="amount" min="1" step="0.01" max="{{ profile.balance }}" required placeholder="1000">
+                </div>
+                <button type="submit" class="btn btn-secondary">Вывести</button>
+            </form>
+            {% else %}
+            <div class="empty-state">
+                <p>Для вывода средств необходимо добавить карту.</p>
+                <a href="{% url 'payment_methods' %}" class="btn btn-secondary">Добавить карту</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- История транзакций -->
+    <div class="transactions-section">
+        <h2>История транзакций</h2>
+        {% if transactions %}
+        <div class="transactions-list">
+            {% for transaction in transactions %}
+            <div class="transaction-item">
+                <div class="transaction-info">
+                    <div class="transaction-type">{{ transaction.get_transaction_type_display }}</div>
+                    {% if transaction.description %}
+                    <div class="transaction-description">{{ transaction.description }}</div>
+                    {% endif %}
+                    <div class="transaction-date">{{ transaction.created_at|date:"d.m.Y H:i" }}</div>
+                </div>
+                <div class="transaction-amount {% if transaction.transaction_type == 'deposit' or transaction.transaction_type == 'order_refund' %}positive{% else %}negative{% endif %}">
+                    {% if transaction.transaction_type == 'deposit' or transaction.transaction_type == 'order_refund' %}+{% else %}-{% endif %}{{ transaction.amount }} ₽
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-transactions">
+            <p>У вас пока нет транзакций</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

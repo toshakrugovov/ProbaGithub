@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои курсы - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+<style>
+  .products-grid .product-card .btn-course-open {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100%;
+    box-sizing: border-box;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+    animation: btn-course-appear 0.4s ease forwards;
+  }
+  .products-grid .product-card .btn-course-open:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--elev, rgba(0,0,0,0.15));
+    opacity: 0.95;
+  }
+  .products-grid .product-card .btn-course-open:active {
+    transform: translateY(0);
+  }
+  @keyframes btn-course-appear {
+    from { opacity: 0.85; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-content">
+    <div class="orders-content" style="max-width: 100%;">
+        <div class="orders-header" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px;">
+            <a href="{% url 'profile' %}">← В профиль</a>
+            <h1 style="margin: 0;">Мои курсы</h1>
+        </div>
+
+        <section class="courses-section" style="margin-bottom: 32px;">
+            <h2 class="section-title" style="font-size: 20px; margin-bottom: 16px;">Актуальные</h2>
+            {% if actual %}
+            <div class="products-grid">
+                {% for purchase in actual %}
+                <div class="product-card" style="display: flex; flex-direction: column;">
+                    <a href="{% url 'course_view' purchase_id=purchase.id %}" style="text-decoration: none; color: inherit; flex: 1; display: flex; flex-direction: column;">
+                        <div class="product-image">
+                            {% if purchase.course.main_image_url %}
+                            <img src="{{ purchase.course.main_image_url }}" alt="{{ purchase.course.title }}">
+                            {% else %}
+                            <div style="padding: 40px; background: var(--border-color); color: var(--text-color-secondary);">Курс</div>
+                            {% endif %}
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name">{{ purchase.course.title }}</h3>
+                        </div>
+                    </a>
+                    <a href="{% url 'course_view' purchase_id=purchase.id %}" class="btn btn-primary btn-course-open" style="margin-top: 12px;">Открыть курс</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">Нет актуальных курсов. <a href="{% url 'catalog' %}">Перейти в каталог</a></p>
+            {% endif %}
+        </section>
+
+        {% if refund_pending %}
+        <section class="courses-section" style="margin-bottom: 32px;">
+            <h2 class="section-title" style="font-size: 20px; margin-bottom: 16px;">На рассмотрении возврата</h2>
+            <p class="empty-state" style="margin-bottom: 12px;">Заявление на возврат по этим курсам уже подано и находится на рассмотрении. Доступ к курсу закрыт до рассмотрения заявления.</p>
+            <div class="products-grid">
+                {% for purchase in refund_pending %}
+                <div class="product-card" style="opacity: 0.85; cursor: default; pointer-events: none;">
+                    <div class="product-image">
+                        {% if purchase.course.main_image_url %}
+                        <img src="{{ purchase.course.main_image_url }}" alt="{{ purchase.course.title }}">
+                        {% else %}
+                        <div style="padding: 40px; background: var(--border-color); color: var(--text-color-secondary);">Курс</div>
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">{{ purchase.course.title }}</h3>
+                        <div class="product-price">Возврат на рассмотрении • Курс недоступен</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="courses-section">
+            <h2 class="section-title" style="font-size: 20px; margin-bottom: 16px;">Архивные</h2>
+            {% if archived %}
+            <div class="products-grid">
+                {% for purchase in archived %}
+                <a href="{% url 'course_view' purchase_id=purchase.id %}" class="product-card" style="text-decoration: none; color: inherit;">
+                    <div class="product-image">
+                        {% if purchase.course.main_image_url %}
+                        <img src="{{ purchase.course.main_image_url }}" alt="{{ purchase.course.title }}">
+                        {% else %}
+                        <div style="padding: 40px; background: var(--border-color); color: var(--text-color-secondary);">Курс</div>
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">{{ purchase.course.title }}</h3>
+                        <div class="product-price">Завершён {{ purchase.completed_at|date:"d.m.Y" }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state">Нет архивных курсов.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if category %}Редактирование категории{% else %}Добавление категории{% endif %} — Панель администратора{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <h1>{% if category %}Редактирование категории курсов{% else %}Добавление категории курсов{% endif %}</h1>
+    <div style="margin-bottom: 16px;">
+        <a href="{% url 'admin_course_categories_list' %}">← Назад к категориям (панель администратора)</a>
+    </div>
+    <form method="post" class="form-container">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="category_name">Название категории *</label>
+            <input type="text" id="category_name" name="category_name" value="{{ category.category_name|default:'' }}" required>
+        </div>
+        <div class="form-actions">
+            <button type="submit">Сохранить</button>
+            <a href="{% url 'admin_course_categories_list' %}">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

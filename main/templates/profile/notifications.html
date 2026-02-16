@@ -1,0 +1,95 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Уведомления - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+.notifications-content {
+    padding: 60px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+.notifications-list {
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.notification-row {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    line-height: 1.5;
+}
+.notification-row:last-child {
+    border-bottom: none;
+}
+.notification-meta {
+    font-size: 12px;
+    color: var(--text-color-secondary);
+}
+.empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-color-secondary);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-content">
+  <div class="notifications-header">
+    <h1>Уведомления</h1>
+    <a href="{% url 'profile' %}">← В профиль</a>
+  </div>
+
+  <div class="notifications-list" id="all-notifications">
+    {% if notifications %}
+      {% for n in notifications %}
+      <div class="notification-row">
+        <div>{{ n.message }}</div>
+        <div class="notification-meta">{{ n.created_at|date:"d.m.Y H:i" }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty" id="empty-msg">Уведомлений пока нет</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not notifications %}
+<script>
+(function(){
+  try {
+    const container = document.getElementById('all-notifications');
+    const emptyMsg = document.getElementById('empty-msg');
+    const userKey = 'userNotifications_' + String({{ request.user.id }});
+    const stored = JSON.parse(localStorage.getItem(userKey) || '[]');
+    if (stored.length) {
+      if (emptyMsg) emptyMsg.style.display = 'none';
+      container.innerHTML = stored.map(n => {
+        const text = (n && n.text) ? n.text : '';
+        const time = (n && n.time) ? n.time : '';
+        return '<div class="notification-row">'+
+                 '<div>'+text+'</div>'+
+                 (time ? '<div class="notification-meta">'+time+'</div>' : '')+
+               '</div>';
+      }).join('');
+    }
+  } catch (e) {}
+})();
+</script>
+{% endif %}
+{% endblock %}
+
+

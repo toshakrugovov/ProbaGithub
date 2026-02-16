@@ -1,0 +1,100 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Управление ролями - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'admin_dashboard' %}" class="table-actions-header a">← Назад</a>
+    </div>
+
+    <form id="create-role-form" class="form-container" style="margin-bottom: 24px;">
+        {% csrf_token %}
+        <div id="form-error" class="form-error" style="display: none; margin-bottom: 16px;"></div>
+        <h2>Создать новую роль</h2>
+        <div class="form-group" style="display: flex; gap: 12px; align-items: end;">
+            <input type="text" id="role_name" name="role_name" placeholder="Название роли" required style="flex: 1;">
+            <button type="submit" id="create-role-btn" style="padding: 10px 24px;">Создать</button>
+        </div>
+    </form>
+
+    <div class="form-container">
+        <h2>Существующие роли</h2>
+        <div class="section-list">
+            {% for role in roles %}
+            <div class="section-item">
+            <div>
+                <strong>{{ role.role_name }}</strong>
+            </div>
+                <button type="button" class="danger" onclick="deleteRole({{ role.id }}, '{{ role.role_name|escapejs }}')">Удалить</button>
+            </div>
+            {% empty %}
+            <p>Роли не найдены</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('create-role-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const errorDiv = document.getElementById('form-error');
+    const submitBtn = document.getElementById('create-role-btn');
+    const roleNameInput = document.getElementById('role_name');
+    errorDiv.style.display = 'none';
+    
+    const roleName = roleNameInput.value.trim();
+    
+    if (!roleName) {
+        errorDiv.textContent = 'Название роли обязательно';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Создание...';
+    
+    try {
+        const result = await ManagementAPI.roles.create({ role_name: roleName });
+        
+        if (result.success) {
+            alert(result.message || 'Роль успешно создана');
+            location.reload();
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при создании роли';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Создать';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Создать';
+    }
+});
+
+async function deleteRole(roleId, roleName) {
+    if (!confirm(`Удалить роль "${roleName}"?`)) {
+        return;
+    }
+    
+    const result = await ManagementAPI.roles.delete(roleId);
+    
+    if (result.success || result.status === 204) {
+        alert('Роль успешно удалена');
+        location.reload();
+    } else {
+        alert('Ошибка: ' + (result.error || 'Не удалось удалить роль'));
+    }
+}
+</script>
+{% endblock %}
+

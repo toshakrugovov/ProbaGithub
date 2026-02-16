@@ -1,0 +1,266 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Регистрация - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="login-content">
+    <div class="login-container">
+        <form class="login-form" id="registerForm">
+            {% csrf_token %}
+            <h2>Регистрация</h2>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <div class="form-group">
+                <label for="first_name">Имя</label>
+                <input type="text" id="first_name" name="first_name" placeholder="Иван" required>
+            </div>
+
+            <div class="form-group">
+                <label for="last_name">Фамилия</label>
+                <input type="text" id="last_name" name="last_name" placeholder="Иванов" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password" name="password" placeholder="Введите пароль" required autocomplete="new-password">
+                    <button type="button" class="toggle-password" data-target="password" aria-label="Показать пароль">👁</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password2">Подтвердите пароль</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password2" name="password2" placeholder="Повторите пароль" required autocomplete="new-password">
+                    <button type="button" class="toggle-password" data-target="password2" aria-label="Показать пароль">👁</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone_number">Телефон</label>
+                <input type="tel" id="phone_number" name="phone_number" placeholder="+7 (___) ___-__-__" required inputmode="tel">
+            </div>
+
+            <div class="form-group">
+                <label for="birth_date">Дата рождения</label>
+                <input type="date" id="birth_date" name="birth_date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="secret_word">Секретное слово</label>
+                <div class="input-wrapper">
+                    <input type="password" id="secret_word" name="secret_word" placeholder="Введите секретное слово" autocomplete="off">
+                    <button type="button" class="toggle-password" data-target="secret_word" aria-label="Показать секретное слово">👁</button>
+                </div>
+                <small style="color: var(--text-color-secondary); font-size: 12px; display: block; margin-top: 4px;">Используется для восстановления пароля и подтверждения важных действий</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: flex-start; cursor: pointer; font-weight: normal;">
+                    <input type="checkbox" id="personal_data_consent" name="personal_data_consent" required style="margin-right: 8px; margin-top: 2px; cursor: pointer;">
+                    <span style="font-size: 14px; line-height: 1.5;">
+                        Я согласен(а) на обработку персональных данных в соответствии с 
+                        <a href="#" target="_blank" style="color: var(--text-color); text-decoration: underline;">политикой конфиденциальности</a>
+                    </span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn" disabled>Зарегистрироваться</button>
+            <a href="/login/" class="back-link">← Уже есть аккаунт? Войти</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const form = document.getElementById('registerForm');
+const firstNameInput = document.getElementById('first_name');
+const lastNameInput = document.getElementById('last_name');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const password2Input = document.getElementById('password2');
+const regPhone = document.getElementById('phone_number');
+const birthInput = document.getElementById('birth_date');
+const secretWordInput = document.getElementById('secret_word');
+const personalDataConsent = document.getElementById('personal_data_consent');
+const submitBtn = document.getElementById('submitBtn');
+const errorMessage = document.getElementById('errorMessage');
+const successMessage = document.getElementById('successMessage');
+
+// === ФУНКЦИИ ===
+function showError(msg) { 
+    errorMessage.textContent = msg; 
+    errorMessage.classList.add('show'); 
+    successMessage.classList.remove('show'); 
+}
+function showSuccess(msg) { 
+    successMessage.textContent = msg; 
+    successMessage.classList.add('show'); 
+    errorMessage.classList.remove('show'); 
+}
+function hideMessages() { 
+    errorMessage.classList.remove('show'); 
+    successMessage.classList.remove('show'); 
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
+        }
+    }
+    if (!cookieValue) {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput) cookieValue = csrfInput.value;
+    }
+    return cookieValue;
+}
+
+// === Проверка силы пароля ===
+function strong(p) {
+    return /[A-ZА-Я]/.test(p) && /[a-zа-я]/.test(p) && /\d/.test(p) && p.length >= 8;
+}
+
+// === Маска телефона ===
+function formatPhone(v) {
+    const d = v.replace(/\D/g, '').replace(/^8/, '7');
+    const s = d.slice(0, 11);
+    let out = '+7';
+    if (s.length > 1) out += ' (' + s.slice(1, 4);
+    if (s.length >= 4) out += ') ' + s.slice(4, 7);
+    if (s.length >= 7) out += '-' + s.slice(7, 9);
+    if (s.length >= 9) out += '-' + s.slice(9, 11);
+    return out;
+}
+regPhone.addEventListener('input', function() {
+    this.value = formatPhone(this.value);
+});
+
+// === Переключатель видимости пароля ===
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.toggle-password');
+    if (!btn) return;
+    const id = btn.getAttribute('data-target');
+    const input = document.getElementById(id);
+    if (input) input.type = input.type === 'password' ? 'text' : 'password';
+});
+
+// === Управление активностью кнопки регистрации ===
+function updateSubmitButton() {
+    if (personalDataConsent && personalDataConsent.checked) {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+    } else {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.style.cursor = 'not-allowed';
+    }
+}
+
+if (personalDataConsent) {
+    personalDataConsent.addEventListener('change', updateSubmitButton);
+    updateSubmitButton(); // Проверяем при загрузке страницы
+}
+
+// === Запрос на регистрацию ===
+async function register(data) {
+    try {
+        const response = await fetch('/api/register/', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'X-CSRFToken': getCookie('csrftoken') 
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        return response.ok ? result : { success:false, error: result.error || 'Ошибка регистрации' };
+    } catch(err) {
+        return { success:false, error:'Ошибка соединения: '+err.message };
+    }
+}
+
+// === Обработка отправки формы ===
+form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    hideMessages();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Регистрация...';
+
+    if (!firstNameInput.value || !lastNameInput.value || !emailInput.value || 
+        !passwordInput.value || !password2Input.value || !regPhone.value || !birthInput.value) {
+        showError('Пожалуйста, заполните все обязательные поля');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Зарегистрироваться';
+        return;
+    }
+
+    if (passwordInput.value !== password2Input.value) {
+        showError('Пароли не совпадают');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Зарегистрироваться';
+        return;
+    }
+
+    if(!strong(passwordInput.value)){
+        showError('Пароль должен содержать минимум 8 символов, буквы верх/низ и цифры');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Зарегистрироваться';
+        return;
+    }
+
+    const normalized = regPhone.value.replace(/\D/g, '').replace(/^8/, '7');
+    if(!/^7\d{10}$/.test(normalized)){
+        showError('Введите телефон в формате +7XXXXXXXXXX (10 цифр после +7)');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Зарегистрироваться';
+        return;
+    }
+
+    const data = {
+        first_name: firstNameInput.value.trim(),
+        last_name: lastNameInput.value.trim(),
+        email: emailInput.value.trim(),
+        password: passwordInput.value,
+        password2: password2Input.value,
+        phone_number: normalized,
+        birth_date: birthInput.value,
+        secret_word: secretWordInput.value.trim(),
+        personal_data_consent: personalDataConsent ? personalDataConsent.checked : false
+    };
+
+    const result = await register(data);
+    if(result.success){
+        showSuccess('Регистрация успешна! Перенаправление...');
+        setTimeout(() => {
+            window.location.href = `/login/?email=${encodeURIComponent(data.email)}`;
+        }, 1200);
+    } else {
+        showError(result.error);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Зарегистрироваться';
+    }
+});
+</script>
+{% endblock %}

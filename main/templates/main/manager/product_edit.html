@@ -1,0 +1,425 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if product %}Редактирование товара{% else %}Добавление товара{% endif %} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+{% with back_url=back_url_name|default:'manager_products_list' %}
+<div class="form-wrap">
+    <div class="dashboard-header">
+        <h1>{% if product %}Редактирование товара{% else %}Добавление товара{% endif %}</h1>
+        <div class="dashboard-actions">
+            <a href="{% url back_url %}">← Назад</a>
+        </div>
+    </div>
+
+    <form id="product-form" class="form-container" method="post" action="#" onsubmit="return false;">
+        {% csrf_token %}
+        <div id="form-error" class="form-error" style="display: none; margin-bottom: 16px;"></div>
+        
+        <div class="form-group">
+            <label for="product_name">Название товара *</label>
+            <input type="text" id="product_name" name="product_name" value="{{ product.product_name|default:'' }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="product_description">Описание</label>
+            <textarea id="product_description" name="product_description">{{ product.product_description|default:'' }}</textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="price">Цена *</label>
+                <input type="number" id="price" name="price" step="0.01" value="{{ product.price|default:'0' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="discount">Скидка (%)</label>
+                <input type="number" id="discount" name="discount" step="0.01" value="{{ product.discount|default:'0' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="stock_quantity">Остаток на складе *</label>
+                <input type="number" id="stock_quantity" name="stock_quantity" value="{{ product.stock_quantity|default:'0' }}" required>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_available" {% if product.is_available or not product %}checked{% endif %}>
+                    Доступен для продажи
+                </label>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="category_id">Категория</label>
+                <select id="category_id" name="category_id">
+                    <option value="">Не выбрано</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.category_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="brand_id">Бренд</label>
+                <select id="brand_id" name="brand_id">
+                    <option value="">Не выбрано</option>
+                    {% for brand in brands %}
+                    <option value="{{ brand.id }}" {% if product.brand_id == brand.id %}selected{% endif %}>{{ brand.brand_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="supplier_id">Поставщик</label>
+            <select id="supplier_id" name="supplier_id">
+                <option value="">Не выбрано</option>
+                {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}" {% if product.supplier_id == supplier.id %}selected{% endif %}>{{ supplier.supplier_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="product_images">Изображения товара</label>
+            <input type="file" id="product_images" multiple accept="image/*">
+            <small>Выберите одно или несколько изображений. Первое изображение будет основным, но вы можете изменить это позже.</small>
+            <div id="images-preview" class="images-preview"></div>
+        </div>
+
+        <div class="sizes-section">
+            <h3 style="margin: 0 0 16px 0; font-size: 18px;">Размеры товара</h3>
+            <div id="sizes-container">
+                {% if product %}
+                    {% for size in product.sizes.all %}
+                    <div class="size-item">
+                        <input type="hidden" name="size_id" value="{{ size.id }}">
+                        <input type="text" name="size_label" value="{{ size.size_label }}" placeholder="Размер (например, S, M, L)">
+                        <input type="number" name="size_stock" value="{{ size.size_stock }}" placeholder="Остаток" min="0">
+                        <button type="button" class="remove-size" onclick="this.parentElement.remove()">Удалить</button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <button type="button" class="add-size" onclick="addSizeField()">+ Добавить размер</button>
+        </div>
+
+        <div class="tags-section">
+            <h3 style="margin: 0 0 16px 0; font-size: 18px;">Теги</h3>
+            <div class="tags-checkboxes">
+                {% for tag in tags %}
+                <label>
+                    <input type="checkbox" name="tags" value="{{ tag.id }}" {% if tag.id in product_tags %}checked{% endif %}>
+                    {{ tag.tag_name }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" id="submit-btn">Сохранить</button>
+            <a href="{% url back_url %}">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.images-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+}
+.images-preview .image-thumb {
+    width: 120px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-color);
+    position: relative;
+}
+.images-preview .image-thumb img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+.images-preview .image-thumb button {
+    font-size: 12px;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.images-preview .image-thumb button.primary-btn {
+    background: var(--primary-color);
+    color: white;
+}
+.images-preview .image-thumb button.secondary-btn {
+    background: #f0f0f0;
+}
+.images-preview .image-thumb .main-label {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: rgba(46, 204, 113, 0.9);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+}
+</style>
+
+<script>
+// Глобальные переменные
+const redirectUrl = "{% url back_url %}";
+const existingImages = JSON.parse('{{ product_images_json|default:"[]"|safe }}');
+let imagesPayload = (existingImages || []).map((img, index) => ({
+    content: img.content,
+    content_type: img.content_type || 'image/jpeg',
+    is_primary: Boolean(img.is_primary) || index === 0,
+    position: typeof img.position === 'number' ? img.position : index
+}));
+
+// Инициализация после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    ensurePrimaryImage();
+    renderImagesPreview();
+
+    const imagesInput = document.getElementById('product_images');
+    if (imagesInput) {
+        imagesInput.addEventListener('change', handleImagesSelection);
+    }
+});
+
+async function handleImagesSelection(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) {
+        return;
+    }
+    const newImages = await Promise.all(
+        files.map(file =>
+            fileToDataUrl(file).then(content => ({
+                content,
+                content_type: file.type || 'image/jpeg',
+                is_primary: false,
+                position: imagesPayload.length
+            }))
+        )
+    );
+    imagesPayload = imagesPayload.concat(newImages);
+    ensurePrimaryImage();
+    renderImagesPreview();
+    event.target.value = '';
+}
+
+function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+}
+
+function ensurePrimaryImage() {
+    if (!imagesPayload.length) {
+        return;
+    }
+    if (!imagesPayload.some(img => img.is_primary)) {
+        imagesPayload[0].is_primary = true;
+    }
+}
+
+function normalizeImagePositions() {
+    imagesPayload = imagesPayload.map((img, idx) => ({
+        ...img,
+        position: idx
+    }));
+}
+
+function renderImagesPreview() {
+    const container = document.getElementById('images-preview');
+    if (!container) return;
+    normalizeImagePositions();
+    container.innerHTML = '';
+
+    if (!imagesPayload.length) {
+        container.innerHTML = '<p style="color: var(--text-color-secondary); font-size: 14px;">Изображения не выбраны</p>';
+        return;
+    }
+
+    imagesPayload.forEach((img, index) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'image-thumb';
+
+        if (img.is_primary) {
+            const badge = document.createElement('span');
+            badge.className = 'main-label';
+            badge.textContent = 'Главное';
+            thumb.appendChild(badge);
+        }
+
+        const imgEl = document.createElement('img');
+        imgEl.src = img.content;
+        imgEl.alt = `Фото ${index + 1}`;
+        thumb.appendChild(imgEl);
+
+        const btnGroup = document.createElement('div');
+        btnGroup.style.display = 'flex';
+        btnGroup.style.flexDirection = 'column';
+        btnGroup.style.gap = '4px';
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'secondary-btn';
+        removeBtn.textContent = 'Удалить';
+        removeBtn.onclick = () => removeImage(index);
+        btnGroup.appendChild(removeBtn);
+
+        const primaryBtn = document.createElement('button');
+        primaryBtn.type = 'button';
+        primaryBtn.className = 'primary-btn';
+        primaryBtn.textContent = img.is_primary ? 'Основное' : 'Сделать основным';
+        primaryBtn.disabled = img.is_primary;
+        primaryBtn.onclick = () => setPrimaryImage(index);
+        btnGroup.appendChild(primaryBtn);
+
+        thumb.appendChild(btnGroup);
+        container.appendChild(thumb);
+    });
+}
+
+function setPrimaryImage(index) {
+    imagesPayload = imagesPayload.map((img, idx) => ({
+        ...img,
+        is_primary: idx === index
+    }));
+    renderImagesPreview();
+}
+
+function removeImage(index) {
+    imagesPayload.splice(index, 1);
+    ensurePrimaryImage();
+    renderImagesPreview();
+}
+
+function getImagesPayloadForSubmit() {
+    normalizeImagePositions();
+    return imagesPayload.map((img, idx) => ({
+        content: img.content,
+        content_type: img.content_type || 'image/jpeg',
+        is_primary: Boolean(img.is_primary),
+        position: typeof img.position === 'number' ? img.position : idx
+    }));
+}
+
+// Делаем функцию глобальной для вызова из onclick
+window.addSizeField = function() {
+    const container = document.getElementById('sizes-container');
+    if (!container) {
+        console.error('Контейнер размеров не найден');
+        return;
+    }
+    const div = document.createElement('div');
+    div.className = 'size-item';
+    div.innerHTML = `
+        <input type="hidden" name="size_id" value="">
+        <input type="text" name="size_label" placeholder="Размер (например, S, M, L)">
+        <input type="number" name="size_stock" placeholder="Остаток" min="0" value="0">
+        <button type="button" class="remove-size" onclick="this.parentElement.remove()">Удалить</button>
+    `;
+    container.appendChild(div);
+};
+
+// Ждем загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('product-form');
+    if (!form) {
+        console.error('Форма не найдена');
+        return;
+    }
+    
+    form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const errorDiv = document.getElementById('form-error');
+    const submitBtn = document.getElementById('submit-btn');
+    errorDiv.style.display = 'none';
+    
+    // Собираем данные формы
+    const sizes = [];
+    document.querySelectorAll('.size-item').forEach(item => {
+        const sizeId = item.querySelector('input[name="size_id"]').value;
+        const sizeLabel = item.querySelector('input[name="size_label"]').value.trim();
+        const sizeStock = item.querySelector('input[name="size_stock"]').value;
+        if (sizeLabel) {
+            sizes.push({
+                id: sizeId || null,
+                size_label: sizeLabel,
+                size_stock: parseInt(sizeStock) || 0
+            });
+        }
+    });
+    
+    const tags = [];
+    document.querySelectorAll('input[name="tags"]:checked').forEach(checkbox => {
+        tags.push(parseInt(checkbox.value));
+    });
+    
+    const data = {
+        product_name: document.getElementById('product_name').value.trim(),
+        product_description: document.getElementById('product_description').value.trim(),
+        price: parseFloat(document.getElementById('price').value) || 0,
+        discount: parseFloat(document.getElementById('discount').value) || 0,
+        stock_quantity: parseInt(document.getElementById('stock_quantity').value) || 0,
+        is_available: document.querySelector('input[name="is_available"]').checked,
+        category_id: document.getElementById('category_id').value || null,
+        brand_id: document.getElementById('brand_id').value || null,
+        supplier_id: document.getElementById('supplier_id').value || null,
+        sizes: sizes,
+        tags: tags,
+        images: getImagesPayloadForSubmit()
+    };
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Сохранение...';
+    
+    try {
+        {% if product %}
+        const result = await ManagementAPI.products.update({{ product.id }}, data);
+        {% else %}
+        const result = await ManagementAPI.products.create(data);
+        {% endif %}
+        
+        if (result.success) {
+            window.location.href = redirectUrl;
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при сохранении товара';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Сохранить';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Сохранить';
+    }
+    });
+});
+</script>
+{% endwith %}
+{% endblock %}
+

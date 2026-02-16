@@ -1,0 +1,80 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if category %}Редактирование категории{% else %}Добавление категории{% endif %} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <h1>{% if category %}Редактирование категории{% else %}Добавление категории{% endif %}</h1>
+    <form id="category-form" class="form-container">
+        {% csrf_token %}
+        <div id="form-error" class="form-error" style="display: none; margin-bottom: 16px;"></div>
+        <div class="form-group">
+            <label for="category_name">Название категории *</label>
+            <input type="text" id="category_name" name="category_name" value="{{ category.category_name|default:'' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="category_description">Описание</label>
+            <textarea id="category_description" name="category_description">{{ category.category_description|default:'' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="parent_category_id">Родительская категория</label>
+            <select id="parent_category_id" name="parent_category_id">
+                <option value="">Нет (основная категория)</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if category.parent_category_id == cat.id %}selected{% endif %}>{{ cat.category_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" id="submit-btn">Сохранить</button>
+            <a href="{% url 'manager_categories_list' %}">Отмена</a>
+        </div>
+    </form>
+
+<script>
+document.getElementById('category-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const errorDiv = document.getElementById('form-error');
+    const submitBtn = document.getElementById('submit-btn');
+    errorDiv.style.display = 'none';
+    
+    const data = {
+        category_name: document.getElementById('category_name').value.trim()
+    };
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Сохранение...';
+    
+    try {
+        {% if category %}
+        const result = await ManagementAPI.categories.update({{ category.id }}, data);
+        {% else %}
+        const result = await ManagementAPI.categories.create(data);
+        {% endif %}
+        
+        if (result.success) {
+            window.location.href = '{% url "manager_categories_list" %}';
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при сохранении категории';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Сохранить';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Сохранить';
+    }
+});
+</script>
+</div>
+{% endblock %}
+

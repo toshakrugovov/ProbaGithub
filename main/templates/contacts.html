@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Контакты - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/contacts.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="contacts-container">
+  <div class="store-block">
+    <h2>Московский приборостроительный техникум РЭУ им. Г.В. Плеханова</h2>
+    <p class="contacts-address">г. Москва, ул. Нежинская, д. 7</p>
+    <a href="https://yandex.ru/maps/org/moskovskiy_priborostroitelny_tekhnikum/187493859185/" target="_blank" rel="noopener noreferrer" class="store-image-wrap">
+      <img src="https://avatars.mds.yandex.net/get-altay/13083354/2a00000191478ba8a7fc9f4f2b6b540be219/orig" alt="Московский приборостроительный техникум, ул. Нежинская, 7" class="store-image">
+    </a>
+    <p class="store-photo-caption">Фото: <a href="https://yandex.ru/maps/org/moskovskiy_priborostroitelny_tekhnikum/187493859185/" target="_blank" rel="noopener noreferrer" class="contacts-link">Яндекс.Карты</a></p>
+  </div>
+  <div class="contacts-block">
+    <h1>Контакты</h1>
+    <div class="contacts-time">Часы работы приёмной комиссии: пн–пт 10:00–17:00, сб 10:00–14:00</div>
+    <div class="contacts-row">
+      <span class="contacts-label">Адрес:</span>
+      <span>г. Москва, ул. Нежинская, д. 7</span>
+    </div>
+    <div class="contacts-row">
+      <span class="contacts-label">Приёмная комиссия:</span>
+      <a class="phone contacts-link" href="tel:+74993170409">8 (499) 317-04-09</a>
+    </div>
+    <div class="contacts-row">
+      <span class="contacts-label">Канцелярия:</span>
+      <a class="contacts-link" href="tel:+74958001200">+7 (495) 800-12-00 (доб. 1470)</a>
+    </div>
+    <div class="contacts-row">
+      <span class="contacts-label">Email:</span>
+      <a class="contacts-link" href="mailto:mpt@rea.ru">mpt@rea.ru</a>
+    </div>
+    <div class="contacts-row">
+      <span class="contacts-label">Приёмная комиссия (email):</span>
+      <a class="contacts-link" href="mailto:pk@mpt.ru">pk@mpt.ru</a>
+    </div>
+    <div class="contacts-row">
+      <span class="contacts-label">Сайт:</span>
+      <a class="contacts-link" href="https://mpt.ru/" target="_blank" rel="noopener noreferrer">mpt.ru</a>
+    </div>
+    <div class="contacts-info">
+      MPTCOURSE — платформа онлайн-курсов Московского приборостроительного техникума Российского экономического университета им. Г.В. Плеханова.<br>
+      Подробнее — в <a class="contacts-link" href="/privacy/">политике конфиденциальности</a>.
+    </div>
+  </div>
+</div>
+
+<div class="yandex-map" id="yandexMap"></div>
+
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+<script>
+  ymaps.ready(init);
+  function init() {
+    var myMap = new ymaps.Map("yandexMap", {
+      center: [55.71286, 37.47654],
+      zoom: 16,
+      controls: ['zoomControl']
+    });
+    var placemark = new ymaps.Placemark([55.71286, 37.47654], {
+      balloonContent: 'Московский приборостроительный техникум РЭУ им. Г.В. Плеханова<br>г. Москва, ул. Нежинская, д. 7'
+    }, {
+      preset: 'islands#redDotIcon'
+    });
+    myMap.geoObjects.add(placemark);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Панель управления{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Панель управления</h1>
+    <div class="dashboard-actions"><a href="/admin/">Django Admin</a></div>
+  </div>
+  <div class="dashboard-grid">
+    {% for b in blocks %}
+    <div class="dashboard-card">
+      <h3>{{ b.title }}</h3>
+      <p>{{ b.desc }}</p>
+      <a href="{% url b.url %}">Открыть</a>
+    </div>
+    {% endfor %}
+  </div>
+  <div style="margin-top:16px;">
+    <p>Для полного управления всеми сущностями используйте Django Admin.</p>
+  </div>
+</div>
+{% endblock %}
+
+

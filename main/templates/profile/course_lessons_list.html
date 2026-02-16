@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.title }} — Уроки{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+<style>
+.lessons-header { margin-bottom: 28px; }
+.lessons-header h1 { font-size: 26px; margin-bottom: 8px; font-weight: 600; }
+.lessons-header .back-link { color: var(--text-color); text-decoration: none; font-size: 14px; }
+.lessons-header .back-link:hover { text-decoration: underline; }
+.lessons-list { display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
+.lesson-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 18px 20px; background: var(--bg-color); border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 12px; text-decoration: none; color: inherit; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.lesson-card:hover { border-color: var(--text-color, var(--text)); box-shadow: 0 2px 12px var(--elev, rgba(0,0,0,0.06)); }
+.lesson-card-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
+.lesson-num {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    /* Светлая тема: чёрный круг с белой цифрой */
+    background: #000000;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+body.dark .lesson-num,
+.dark-theme .lesson-num {
+    background: #ffffff;
+    color: #000000;
+}
+.lesson-card.completed .lesson-num {
+    background: #000000;
+    color: #ffffff;
+}
+body.dark .lesson-card.completed .lesson-num,
+.dark-theme .lesson-card.completed .lesson-num {
+    background: #ffffff;
+    color: #000000;
+}
+.lesson-title { font-size: 16px; font-weight: 500; color: var(--text-color); }
+.lesson-meta { font-size: 13px; color: var(--text-color); margin-top: 2px; }
+.lesson-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+    /* Светлая тема: чёрный бейдж с белым текстом */
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+}
+.lesson-badge.done {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+}
+.lesson-badge.pending {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+}
+body.dark .lesson-badge,
+.dark-theme .lesson-badge {
+    background: #ffffff;
+    /* В тёмной теме текст делаем чёрным, чтобы было видно слово "Пройден" */
+    color: #000000;
+    border-color: #ffffff;
+}
+.arrow { color: var(--text-color); font-size: 18px; }
+.course-end-block .star.active { color: var(--text-color, var(--text)); opacity: 1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-content">
+    <div class="orders-content" style="max-width: 720px;">
+        <div class="lessons-header">
+            <h1>{{ course.title }}</h1>
+            <a href="{% url 'my_courses' %}" class="back-link">← Мои курсы</a>
+        </div>
+        <p style="margin-bottom: 24px; color: var(--text-color);">Выберите урок. В каждом уроке — до 10 страниц: картинка, видео или PDF и текст. В конце урока нажмите «Я усвоил» и оцените урок.</p>
+
+        <div class="lessons-list">
+            {% for lesson in lessons %}
+            <a href="{% url 'lesson_view' purchase_id=purchase.id lesson_id=lesson.id %}" class="lesson-card {% if lesson.id in completed_lesson_ids %}completed{% endif %}">
+                <div class="lesson-card-left">
+                    <span class="lesson-num">{{ forloop.counter }}</span>
+                    <div>
+                        <div class="lesson-title">{{ lesson.title|default:"Урок "|add:forloop.counter }}</div>
+                        <div class="lesson-meta">{{ lesson.pages.all|length }} стр.</div>
+                    </div>
+                </div>
+                {% if lesson.id in completed_lesson_ids %}
+                <span class="lesson-badge done">Пройден</span>
+                {% else %}
+                <span class="lesson-badge pending">К прохождению</span>
+                {% endif %}
+                <span class="arrow">→</span>
+            </a>
+            {% empty %}
+            <p style="padding: 24px; background: var(--surface, #f5f5f5); border-radius: 12px; color: var(--text-color);">В курсе пока нет уроков. Они появятся после добавления контента автором.</p>
+            {% endfor %}
+        </div>
+
+        {% if all_lessons_completed %}
+        <div class="course-end-block" style="margin-top: 32px; padding: 24px; background: var(--surface, #f5f5f5); border: 1px solid var(--border-color); border-radius: 12px;">
+            {% if has_review %}
+            <p style="margin: 0 0 16px; font-weight: 600; color: var(--text-color);">Курс пройден. Спасибо, вы уже оставили отзыв.</p>
+            <a href="{% url 'my_courses' %}" class="btn btn-primary" style="display: block; width: 100%; text-align: center; box-sizing: border-box;">К моим курсам</a>
+            {% else %}
+            <h3 style="margin: 0 0 16px; font-size: 18px; color: var(--text-color);">Курс пройден. Оставьте отзыв</h3>
+            <form id="review-form" style="width: 100%; max-width: 100%; box-sizing: border-box;">
+                {% csrf_token %}
+                <div class="stars-rating" id="review-stars" style="margin-bottom: 12px; font-size: 28px; letter-spacing: 4px;">
+                    <span class="star" data-rating="1" style="cursor: pointer; opacity: 0.4;">★</span>
+                    <span class="star" data-rating="2" style="cursor: pointer; opacity: 0.4;">★</span>
+                    <span class="star" data-rating="3" style="cursor: pointer; opacity: 0.4;">★</span>
+                    <span class="star" data-rating="4" style="cursor: pointer; opacity: 0.4;">★</span>
+                    <span class="star" data-rating="5" style="cursor: pointer; opacity: 0.4;">★</span>
+                </div>
+                <input type="hidden" id="review-rating" value="0">
+                <div style="margin-bottom: 12px;">
+                    <label for="review-text" style="display: block; font-weight: 600; margin-bottom: 4px; color: var(--text-color);">Текст отзыва (необязательно)</label>
+                    <textarea id="review-text" rows="3" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-family: inherit; box-sizing: border-box; background: var(--bg-color); color: var(--text-color);"></textarea>
+                </div>
+                <button type="button" class="btn btn-primary" id="review-submit" disabled style="display: block; width: 100%; box-sizing: border-box;">Оставить отзыв</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="refund-block" style="margin-top: 20px; padding: 16px 20px; background: var(--surface, #f5f5f5); border: 1px solid var(--border-color); border-radius: 12px;">
+            {% if has_pending_refund %}
+            <p style="margin: 0; color: var(--text-color);">Заявление на возврат по этому курсу уже подано и находится на рассмотрении.</p>
+            {% elif can_request_refund %}
+            <p style="margin: 0 0 12px 0; color: var(--text-color);">Уроки не пройдены — вы можете оформить заявление на возврат средств.</p>
+            <form method="post" action="{% url 'course_refund_request_create' purchase.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn" style="display: block; width: 100%; box-sizing: border-box;">Оформить заявление на возврат</button>
+            </form>
+            {% else %}
+            <p style="margin: 0; color: var(--text-color);">Оформить заявление на возврат недоступно: вы уже прошли уроки курса.</p>
+            <button type="button" class="btn" disabled style="opacity: 0.6; cursor: not-allowed; margin-top: 8px; display: block; width: 100%; box-sizing: border-box;">Оформить заявление на возврат</button>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="refund-block" style="margin-top: 24px; padding: 16px 20px; background: var(--surface, #f5f5f5); border: 1px solid var(--border-color); border-radius: 12px;">
+            {% if has_pending_refund %}
+            <p style="margin: 0; color: var(--text-color);">Заявление на возврат по этому курсу уже подано и находится на рассмотрении.</p>
+            {% elif can_request_refund %}
+            <p style="margin: 0 0 12px 0; color: var(--text-color);">Уроки не пройдены — вы можете оформить заявление на возврат средств.</p>
+            <form method="post" action="{% url 'course_refund_request_create' purchase.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn" style="display: block; width: 100%; box-sizing: border-box;">Оформить заявление на возврат</button>
+            </form>
+            {% else %}
+            <p style="margin: 0; color: var(--text-color);">Оформить заявление на возврат недоступно: вы уже прошли уроки курса.</p>
+            <button type="button" class="btn" disabled style="opacity: 0.6; cursor: not-allowed; margin-top: 8px; display: block; width: 100%; box-sizing: border-box;">Оформить заявление на возврат</button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if all_lessons_completed and not has_review %}
+<script>
+(function() {
+    function getCookie(name) {
+        var v = null;
+        if (document.cookie) {
+            document.cookie.split(';').forEach(function(c) {
+                c = c.trim();
+                if (c.indexOf(name + '=') === 0) v = decodeURIComponent(c.substring(name.length + 1));
+            });
+        }
+        return v;
+    }
+    var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+    var csrfToken = csrf ? csrf.value : getCookie('csrftoken');
+    var reviewStars = document.getElementById('review-stars');
+    var reviewRating = document.getElementById('review-rating');
+    var reviewSubmit = document.getElementById('review-submit');
+    if (reviewStars && reviewSubmit) {
+        reviewStars.querySelectorAll('.star').forEach(function(star) {
+            star.addEventListener('click', function() {
+                var r = parseInt(this.getAttribute('data-rating'), 10);
+                reviewRating.value = r;
+                reviewStars.querySelectorAll('.star').forEach(function(s, i) {
+                    s.classList.toggle('active', i < r);
+                    s.style.opacity = i < r ? '1' : '0.4';
+                });
+                reviewSubmit.disabled = false;
+            });
+        });
+        reviewSubmit.addEventListener('click', function() {
+            var r = parseInt(reviewRating.value, 10);
+            if (r < 1 || r > 5) return;
+            var text = (document.getElementById('review-text') && document.getElementById('review-text').value) || '';
+            fetch('{% url "course_review_submit" purchase_id=purchase.id %}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ rating: r, text: text }),
+                credentials: 'same-origin'
+            }).then(function(res) { return res.json(); }).then(function(data) {
+                if (data.success) window.location.reload();
+                else if (data.message) alert(data.message);
+            }).catch(function() { alert('Ошибка отправки'); });
+        });
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}

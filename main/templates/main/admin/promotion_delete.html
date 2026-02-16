@@ -1,0 +1,34 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Удаление промокода - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="confirm-wrap">
+    <div class="confirm-box">
+        <h1>Удаление промокода</h1>
+        <p class="form-error" style="font-weight: 600; margin-bottom: 16px;">
+            <strong>Внимание!</strong> Вы собираетесь удалить промокод. Это действие нельзя отменить.
+        </p>
+        <div style="margin-bottom: 20px; text-align: left;">
+            <p><strong>Код:</strong> {{ promotion.promo_code }}</p>
+            <p><strong>Описание:</strong> {{ promotion.promo_description|default:"—" }}</p>
+            <p><strong>Скидка:</strong> {{ promotion.discount }}%</p>
+            <p><strong>Статус:</strong> {% if promotion.is_active %}Активен{% else %}Неактивен{% endif %}</p>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="confirm-actions">
+                <button type="submit">Удалить</button>
+                <a href="{% url 'admin_promotions_list' %}">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

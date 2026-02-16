@@ -1,0 +1,130 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Бэкапы базы данных - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="table-wrap">
+    <div class="table-header">
+        <h1>Бэкапы базы данных</h1>
+        <div class="table-actions-header">
+            <a href="{% url 'admin_dashboard' %}">← Назад</a>
+            <a href="{% url 'admin_backup_create' %}">+ Создать бэкап</a>
+        </div>
+    </div>
+
+    <div style="background: var(--bg-color); padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+        <h3 style="margin: 0 0 8px 0; font-size: 14px;">ℹ️ Информация</h3>
+        <p style="margin: 0; font-size: 12px; color: var(--text-color-secondary); line-height: 1.5;">
+            Бэкапы хранятся в базе данных и доступны только администраторам. Для настройки автоматических бэкапов используйте планировщик задач Windows или cron (Linux) с командой:<br>
+            <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">python manage.py create_scheduled_backups --schedule weekly</code>
+        </p>
+    </div>
+
+    <div style="background: var(--surface); padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--input-border);">
+        <h3 style="margin: 0 0 8px 0; font-size: 14px; color: var(--text);">⚠️ Тестирование восстановления</h3>
+        <p style="margin: 0; font-size: 12px; color: var(--text); line-height: 1.5;">
+            Для тестирования восстановления вы можете удалить базу данных. После удаления используйте функцию восстановления из бэкапа, чтобы вернуть сайт в рабочее состояние.
+        </p>
+        <a href="{% url 'admin_db_delete' %}" class="btn" style="display: inline-block; margin-top: 12px; padding: 8px 16px; text-decoration: none; font-size: 12px;">
+            🗑️ Удалить базу данных (тест)
+        </a>
+    </div>
+
+    {% if error %}
+    <div style="background: var(--surface); padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--input-border);">
+        <h3 style="margin: 0 0 8px 0; font-size: 14px; color: var(--text);">❌ Ошибка</h3>
+        <p style="margin: 0; font-size: 12px; color: var(--text);">{{ error }}</p>
+        <p style="margin: 8px 0 0 0; font-size: 12px; color: var(--text);">
+            Если база данных была удалена или повреждена, используйте <a href="/emergency-restore/" class="link-accent">экстренное восстановление</a>.
+        </p>
+    </div>
+    {% endif %}
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Дата создания</th>
+                <th>Создан пользователем</th>
+                <th>Размер</th>
+                <th>Расписание</th>
+                <th>Тип</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if page_obj %}
+            {% for backup in page_obj %}
+            <tr>
+                <td>{{ backup.id }}</td>
+                <td><strong>{{ backup.backup_name }}</strong></td>
+                <td>{{ backup.created_at|date:"d.m.Y H:i" }}</td>
+                <td>{{ backup.created_by.username|default:"Система" }}</td>
+                <td>{{ backup.get_file_size_mb }} МБ</td>
+                <td>{{ backup.get_schedule_display|default:backup.schedule }}</td>
+                <td>
+                    <span class="status-badge {% if backup.is_automatic %}status-active{% else %}status-blocked{% endif %}">
+                        {% if backup.is_automatic %}Автоматический{% else %}Ручной{% endif %}
+                    </span>
+                </td>
+                <td class="table-actions">
+                    <a href="{% url 'admin_backup_download' backup.id %}">Скачать</a>
+                    <a href="{% url 'admin_backup_restore' backup.id %}" class="btn" style="padding: 4px 12px; font-size: 12px; margin: 0 4px; text-decoration: none;">Восстановить</a>
+                    <button type="button" class="danger" onclick="deleteBackup({{ backup.id }}, '{{ backup.backup_name|escapejs }}')">Удалить</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align:center; padding:40px;">Бэкапы не найдены</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="8" style="text-align:center; padding:40px; color: var(--text-color);">
+                    Не удалось загрузить список бэкапов. Возможно, база данных недоступна.
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    {% if page_obj.has_other_pages %}
+    <div class="data-pager">
+        {% if page_obj.has_previous %}
+        <a href="?page=1">« Первая</a>
+        <a href="?page={{ page_obj.previous_page_number }}">‹ Предыдущая</a>
+        {% endif %}
+        <span class="current">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Следующая ›</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">Последняя »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function deleteBackup(backupId, backupName) {
+    if (!confirm(`Удалить бэкап "${backupName}"?`)) {
+        return;
+    }
+    
+    const result = await ManagementAPI.backups.delete(backupId);
+    
+    if (result.success || result.status === 204) {
+        alert('Бэкап успешно удален');
+        location.reload();
+    } else {
+        alert('Ошибка: ' + (result.error || 'Не удалось удалить бэкап'));
+    }
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,338 @@
+/* === Темная и светлая тема (ч/б, переменные заданы в theme.css) === */
+body.light {
+    --card-bg: var(--bg);
+    --card-text: var(--text);
+    --discount-color: var(--text-color);
+    --modal-border-color: var(--input-border);
+}
+
+body.dark, .dark-theme {
+    --card-bg: var(--surface);
+    --card-text: var(--text);
+    --discount-color: var(--text-color);
+    --modal-border-color: var(--input-border);
+}
+
+/* === Секция товаров === */
+.products-section {
+    padding: 80px 20px 60px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 25px;
+    justify-items: center;
+}
+
+/* === Карточка товара === */
+.product-card {
+    background-color: var(--card-bg);
+    color: var(--card-text);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    max-width: 280px;
+    width: 100%;
+    position: relative;
+    cursor: pointer;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* === Изображение товара === */
+.product-image {
+    width: 100%;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f7f7f7;
+    color: #666;
+}
+
+body.dark .product-image {
+    background-color: #1b1b1b;
+    color: #aaa;
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.product-card:hover .product-image img {
+    transform: scale(1.05);
+}
+
+/* === Информация о товаре === */
+.product-info {
+    padding: 10px 15px;
+}
+
+.product-info h3 {
+    font-size: 18px;
+    margin: 5px 0;
+}
+
+.product-price {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.product-old-price {
+    text-decoration: line-through;
+    color: #888;
+    margin-right: 5px;
+}
+
+.product-discount {
+    background: var(--discount-color);
+    color: #ffffff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 5px;
+    display: inline-block;
+}
+
+/* === Действия с товаром === */
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+body.dark .product-actions {
+    border-top-color: rgba(255,255,255,0.1);
+}
+
+.product-actions button {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+}
+
+.product-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.product-actions button:active {
+    transform: translateY(0);
+}
+
+/* Кнопка "Добавить в корзину" - стиль как .btn-primary */
+.btn-add-cart {
+    background: var(--brand);
+    color: var(--brand-contrast);
+    border-color: var(--brand);
+}
+
+.btn-add-cart:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.btn-add-cart:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Кнопка "Удалить" - белая с черным текстом и границей */
+.btn-remove-fav {
+    background: #ffffff;
+    color: #000000;
+    border-color: #000000;
+}
+
+body.dark .btn-remove-fav {
+    background: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+}
+
+.btn-remove-fav:hover:not(:disabled) {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+body.dark .btn-remove-fav:hover:not(:disabled) {
+    background: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+}
+
+.btn-remove-fav:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Текст кнопок */
+.btn-text {
+    font-size: 14px;
+}
+
+/* === Адаптивность === */
+@media (max-width: 768px) {
+    .products-section {
+        padding: 60px 15px 40px 15px;
+    }
+    
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+    }
+    
+    .product-card {
+        max-width: 100%;
+    }
+    
+    .product-image {
+        height: 250px;
+    }
+    
+    .product-actions button {
+        padding: 14px 16px;
+    }
+    
+    .btn-text {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .products-section {
+        padding: 50px 10px 30px 10px;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .product-image {
+        height: 220px;
+    }
+    
+    .product-info {
+        padding: 12px;
+    }
+    
+    .product-info h3 {
+        font-size: 16px;
+    }
+    
+    .product-price {
+        font-size: 16px;
+    }
+}
+
+/* === Уведомления === */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ffffff;
+    color: #333;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10000;
+    min-width: 300px;
+    max-width: 400px;
+    opacity: 0;
+    transform: translateX(400px);
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+body.dark .notification {
+    background: #2a2a2a;
+    color: #ffffff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification-success {
+    border-left: 4px solid #4caf50;
+}
+
+.notification-error {
+    border-left: 4px solid #f44336;
+}
+
+.notification-info {
+    border-left: 4px solid #2196f3;
+}
+
+.notification-icon {
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.notification-success .notification-icon {
+    color: #4caf50;
+}
+
+.notification-error .notification-icon {
+    color: #f44336;
+}
+
+.notification-info .notification-icon {
+    color: #2196f3;
+}
+
+.notification-message {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .notification {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+        max-width: none;
+        transform: translateY(-100px);
+    }
+    
+    .notification.show {
+        transform: translateY(0);
+    }
+}
+

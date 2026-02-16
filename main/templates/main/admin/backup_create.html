@@ -1,0 +1,98 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Создание бэкапа - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <div class="form-container">
+        <h2>Создание бэкапа базы данных</h2>
+        <form id="backup-form">
+            {% csrf_token %}
+            <div id="form-error" class="form-error" style="display: none; margin-bottom: 16px;"></div>
+            
+            <div class="form-group">
+                <label for="backup_name">Название бэкапа *</label>
+                <input type="text" id="backup_name" name="backup_name" placeholder="Бэкап от 01.01.2024" required>
+                <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Если не указано, будет использовано автоматическое название</div>
+            </div>
+
+            <div class="form-group">
+                <label for="schedule">Расписание</label>
+                <select id="schedule" name="schedule">
+                    <option value="now" selected>Прямо сейчас</option>
+                    <option value="weekly">Каждую неделю</option>
+                    <option value="monthly">Раз в месяц</option>
+                    <option value="yearly">Раз в год</option>
+                </select>
+                <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">
+                    <strong>Прямо сейчас</strong> - создаст бэкап немедленно<br>
+                    <strong>Каждую неделю/месяц/год</strong> - сохраняет настройку для автоматических бэкапов (требуется настройка cron/планировщика задач)
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Примечания</label>
+                <textarea id="notes" name="notes" placeholder="Дополнительная информация о бэкапе..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" id="submit-btn">Создать бэкап</button>
+                <a href="{% url 'admin_backups_list' %}">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('backup-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const errorDiv = document.getElementById('form-error');
+    const submitBtn = document.getElementById('submit-btn');
+    errorDiv.style.display = 'none';
+    
+    const data = {
+        schedule: document.getElementById('schedule').value
+    };
+    
+    const backupName = document.getElementById('backup_name').value.trim();
+    if (backupName) {
+        data.backup_name = backupName;
+    }
+    
+    const notes = document.getElementById('notes').value.trim();
+    if (notes) {
+        data.notes = notes;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Создание бэкапа...';
+    
+    try {
+        const result = await ManagementAPI.backups.create(data);
+        
+        if (result.success) {
+            alert(result.message || 'Бэкап успешно создан');
+            window.location.href = '{% url "admin_backups_list" %}';
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при создании бэкапа';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Создать бэкап';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Создать бэкап';
+    }
+});
+</script>
+{% endblock %}
+

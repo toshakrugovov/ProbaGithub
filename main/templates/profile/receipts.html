@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои чеки - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+.receipts-content { max-width: 1000px; margin: 0 auto; padding: 60px 20px; }
+.receipts-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.receipts-list { display: flex; flex-direction: column; gap: 16px; }
+.receipt-card { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+body:not(.dark-theme) .receipt-card { border: 1px solid #000; background: #fff; }
+.receipt-info { display: flex; flex-direction: column; gap: 6px; }
+.receipt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.receipt-actions a { margin: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="receipts-content">
+  <div class="receipts-header">
+    <h1>Мои чеки</h1>
+    <a href="{% url 'profile' %}">← В профиль</a>
+  </div>
+
+  {% if receipts %}
+  <div class="receipts-list">
+    {% for r in receipts %}
+    <div class="receipt-card">
+      <div class="receipt-info">
+        <div><strong>Чек №:</strong> {{ r.number|default:r.id }} • <strong>Заказ:</strong> #{{ r.order_id }}</div>
+        <div><strong>Дата:</strong> {{ r.created_at|date:"d.m.Y H:i" }} • <strong>Статус:</strong> {{ r.get_status_display }}</div>
+        <div><strong>Сумма:</strong> {{ r.total_amount }} ₽ • <strong>НДС {{ r.vat_rate }}%:</strong> {{ r.vat_amount }} ₽</div>
+      </div>
+      <div class="receipt-actions">
+        <a class="btn btn-secondary" href="{% url 'receipt_pdf' r.id %}" target="_blank">Открыть чек</a>
+        <a class="btn btn-secondary" href="{% url 'receipt_pdf' r.id %}?download=1" download>Скачать PDF</a>
+        <a class="btn" href="{% url 'order_detail' r.order_id %}">К заказу</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p>Чеки еще не сформированы.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+

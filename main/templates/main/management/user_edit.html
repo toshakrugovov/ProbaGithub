@@ -1,0 +1,109 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Редактирование пользователя{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+  <div class="form-container">
+    <h2>Редактирование пользователя #{{ user_obj.id }}</h2>
+    <form method="post">
+      {% csrf_token %}
+      
+      <div style="font-size:18px; font-weight:700; margin:24px 0 16px 0; padding-bottom:8px; border-bottom:1px solid #000;">Основная информация</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Логин (username) *</label>
+          <input type="text" name="username" value="{{ user_obj.username }}" required>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" name="email" value="{{ user_obj.email }}" required>
+        </div>
+        <div class="form-group">
+          <label>Имя</label>
+          <input type="text" name="first_name" value="{{ user_obj.first_name }}">
+        </div>
+        <div class="form-group">
+          <label>Фамилия</label>
+          <input type="text" name="last_name" value="{{ user_obj.last_name }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Новый пароль (оставьте пустым, чтобы не менять)</label>
+        <input type="password" name="password" placeholder="Введите новый пароль">
+        <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Пароль будет изменен только если поле заполнено</div>
+      </div>
+
+      <div style="font-size:18px; font-weight:700; margin:24px 0 16px 0; padding-bottom:8px; border-bottom:1px solid #000;">Права доступа</div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="is_active" id="is_active" {% if user_obj.is_active %}checked{% endif %}>
+          Активен
+        </label>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="is_staff" id="is_staff" {% if user_obj.is_staff %}checked{% endif %}>
+          Персонал (доступ к Django Admin)
+        </label>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="is_superuser" id="is_superuser" {% if user_obj.is_superuser %}checked{% endif %}>
+          Суперпользователь
+        </label>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="blocked" id="blocked" {% if profile.user_status == 'blocked' %}checked{% endif %}>
+          Заблокирован
+        </label>
+      </div>
+
+      <div style="font-size:18px; font-weight:700; margin:24px 0 16px 0; padding-bottom:8px; border-bottom:1px solid #000;">Профиль</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Полное имя</label>
+          <input type="text" name="full_name" value="{{ profile.full_name|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label>Телефон</label>
+          <input type="text" name="phone_number" value="{{ profile.phone_number|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label>Дата рождения</label>
+          <input type="date" name="birth_date" value="{{ profile.birth_date|date:'Y-m-d'|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label>Баланс (₽)</label>
+          <input type="number" name="balance" step="0.01" value="{{ profile.balance|default:0 }}">
+        </div>
+        <div class="form-group">
+          <label>Роль</label>
+          <select name="role_id">
+            <option value="">— Без роли —</option>
+            {% for r in roles %}
+              <option value="{{ r.id }}" {% if profile.role and profile.role.id == r.id %}selected{% endif %}>{{ r.role_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Секретное слово (оставьте пустым, чтобы не менять)</label>
+          <input type="password" name="secret_word" placeholder="Введите новое секретное слово">
+          <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Используется для восстановления пароля и подтверждения важных действий</div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit">Сохранить изменения</button>
+        <a href="{% url 'management_users_list' %}">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

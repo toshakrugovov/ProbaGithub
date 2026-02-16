@@ -1,0 +1,113 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if supplier %}Редактирование поставщика{% else %}Добавление поставщика{% endif %} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <h1>{% if supplier %}Редактирование поставщика{% else %}Добавление поставщика{% endif %}</h1>
+    <form id="supplier-form" class="form-container">
+        {% csrf_token %}
+        <div id="form-error" class="form-error" style="display: none; margin-bottom: 16px;"></div>
+        
+        <div class="form-group">
+            <label for="supplier_name">Название поставщика *</label>
+            <input type="text" id="supplier_name" name="supplier_name" value="{{ supplier.supplier_name|default:'' }}" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="contact_person">Контактное лицо</label>
+                <input type="text" id="contact_person" name="contact_person" value="{{ supplier.contact_person|default:'' }}">
+            </div>
+            <div class="form-group">
+                <label for="contact_phone">Телефон</label>
+                <input type="text" id="contact_phone" name="contact_phone" value="{{ supplier.contact_phone|default:'' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="contact_email">Email</label>
+                <input type="email" id="contact_email" name="contact_email" value="{{ supplier.contact_email|default:'' }}">
+            </div>
+            <div class="form-group">
+                <label for="supply_country">Страна поставки</label>
+                <input type="text" id="supply_country" name="supply_country" value="{{ supplier.supply_country|default:'' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="delivery_cost">Стоимость доставки (₽)</label>
+                <input type="number" id="delivery_cost" name="delivery_cost" step="0.01" value="{{ supplier.delivery_cost|default:'' }}">
+            </div>
+            <div class="form-group">
+                <label for="supplier_type">Тип поставщика</label>
+                <input type="text" id="supplier_type" name="supplier_type" value="{{ supplier.supplier_type|default:'' }}" placeholder="Например: оптовый, розничный">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" id="submit-btn">Сохранить</button>
+            <a href="{% url 'admin_suppliers_list' %}">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('supplier-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const errorDiv = document.getElementById('form-error');
+    const submitBtn = document.getElementById('submit-btn');
+    errorDiv.style.display = 'none';
+    
+    const data = {
+        supplier_name: document.getElementById('supplier_name').value.trim(),
+        contact_person: document.getElementById('contact_person').value.trim(),
+        contact_phone: document.getElementById('contact_phone').value.trim(),
+        contact_email: document.getElementById('contact_email').value.trim(),
+        supply_country: document.getElementById('supply_country').value.trim(),
+        supplier_type: document.getElementById('supplier_type').value.trim()
+    };
+    
+    const deliveryCost = document.getElementById('delivery_cost').value.trim();
+    if (deliveryCost) {
+        data.delivery_cost = deliveryCost;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Сохранение...';
+    
+    try {
+        {% if supplier %}
+        const result = await ManagementAPI.suppliers.update({{ supplier.id }}, data);
+        {% else %}
+        const result = await ManagementAPI.suppliers.create(data);
+        {% endif %}
+        
+        if (result.success) {
+            alert(result.message || 'Поставщик успешно сохранен');
+            window.location.href = '{% url "admin_suppliers_list" %}';
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при сохранении поставщика';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Сохранить';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Сохранить';
+    }
+});
+</script>
+{% endblock %}
+

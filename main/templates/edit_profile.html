@@ -1,0 +1,119 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Редактировать профиль - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+<link rel="stylesheet" href="{% static 'css/edit_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-content">
+    <div class="profile-container">
+        <form class="profile-form" method="post" id="editProfileForm">
+            {% csrf_token %}
+            <h2>Редактировать профиль</h2>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <div class="form-group">
+                <label for="first_name">Имя</label>
+                <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="last_name">Фамилия</label>
+                <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone_number">Телефон</label>
+                <input type="tel" id="phone_number" name="phone_number" value="{{ profile.phone_number }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="birth_date">Дата рождения</label>
+                <input type="date" id="birth_date" name="birth_date" value="{{ profile.birth_date|date:'Y-m-d' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="secret_word">Секретное слово</label>
+                <input type="password" id="secret_word" name="secret_word" placeholder="Введите новое секретное слово (оставьте пустым, чтобы не менять)">
+                <small style="color: var(--text-color-secondary); font-size: 12px; display: block; margin-top: 4px;">Используется для восстановления пароля и подтверждения важных действий</small>
+            </div>
+
+            <button type="submit" class="btn">Сохранить изменения</button>
+            <a href="{% url 'profile' %}" class="btn">← Назад в профиль</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const form = document.getElementById('editProfileForm');
+const firstNameInput = document.getElementById('first_name');
+const lastNameInput = document.getElementById('last_name');
+const phoneInput = document.getElementById('phone_number');
+const birthInput = document.getElementById('birth_date');
+const secretWordInput = document.getElementById('secret_word');
+const errorMessage = document.getElementById('errorMessage');
+const successMessage = document.getElementById('successMessage');
+
+function showError(msg){ errorMessage.textContent = msg; errorMessage.classList.add('show'); successMessage.classList.remove('show'); }
+function showSuccess(msg){ successMessage.textContent = msg; successMessage.classList.add('show'); errorMessage.classList.remove('show'); }
+function hideMessages(){ errorMessage.classList.remove('show'); successMessage.classList.remove('show'); }
+
+function getCookie(name) {
+    let cookieValue = null;
+    if(document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for(let cookie of cookies){
+            cookie = cookie.trim();
+            if(cookie.startsWith(name + '=')){
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
+        }
+    }
+    if(!cookieValue){
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if(csrfInput) cookieValue = csrfInput.value;
+    }
+    return cookieValue;
+}
+
+form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    hideMessages();
+
+    const data = {
+        first_name: firstNameInput.value.trim(),
+        last_name: lastNameInput.value.trim(),
+        phone_number: phoneInput.value.trim(),
+        birth_date: birthInput.value,
+        secret_word: secretWordInput.value.trim()
+    };
+
+    try {
+        const response = await fetch("/api/profile/", {
+            method: 'PUT',
+            headers: {'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+            body: JSON.stringify(data),
+            credentials: 'same-origin'
+        });
+        const result = await response.json();
+        if(result.success){
+            showSuccess('Профиль успешно обновлён!');
+            setTimeout(()=>{ location.href="{% url 'profile' %}"; }, 1200);
+        } else {
+            showError(result.error || 'Ошибка сохранения');
+        }
+    } catch(err){
+        showError('Ошибка соединения: '+err.message);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Корзина - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="cart-page">
+    <h2 class="cart-title">Ваша корзина</h2>
+
+    <div id="cart-loading" class="cart-loading">Загрузка корзины...</div>
+    <div class="cart-container" id="cart-container" style="display: none;"></div>
+    <div class="cart-summary" id="cart-summary" style="display: none;">
+        <div class="cart-total">
+            <span>Итого:</span>
+            <strong id="cart-total-value">0 ₽</strong>
+        </div>
+        <div class="cart-actions">
+            <a href="{% url 'catalog' %}" class="btn-outline">← Продолжить покупки</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'checkout' %}" class="btn-primary" id="checkout-btn">Оформить заказ</a>
+            {% else %}
+                <a href="{% url 'login' %}?next={% url 'checkout' %}" class="btn-primary" id="checkout-btn">Оформить заказ</a>
+            {% endif %}
+        </div>
+    </div>
+    <p id="cart-empty" class="empty-cart" style="display: none;">Ваша корзина пуста</p>
+</div>
+
+<script>
+var catalogUrl = "{% url 'catalog' %}";
+function getCookie(name) {
+    let cookieValue = null;
+    if(document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for(let cookie of cookies){
+            cookie = cookie.trim();
+            if(cookie.startsWith(name + '=')){
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
+        }
+    }
+    if(!cookieValue){
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if(csrfInput) cookieValue = csrfInput.value;
+    }
+    return cookieValue;
+}
+
+function renderCart(data) {
+    const container = document.getElementById('cart-container');
+    const summary = document.getElementById('cart-summary');
+    const loading = document.getElementById('cart-loading');
+    const empty = document.getElementById('cart-empty');
+    loading.style.display = 'none';
+    const items = (data && data.items) ? data.items : [];
+    const totalPrice = data && data.total_price != null ? parseFloat(data.total_price) : 0;
+    if (items.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+    container.style.display = 'block';
+    summary.style.display = 'block';
+    document.getElementById('cart-total-value').textContent = totalPrice.toFixed(0) + ' ₽';
+    container.innerHTML = '';
+    items.forEach(function(item) {
+        const unitPrice = parseFloat(item.unit_price || 0);
+        const qty = parseInt(item.quantity || 1, 10);
+        const subtotal = (unitPrice * qty).toFixed(0);
+        const title = (item.course_title || (item.course && item.course.title)) || 'Курс';
+        const imgSrc = item.course_cover_image || (item.course && (item.course.cover_image_path || item.course.main_image_url)) || '';
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = '<div class="cart-item-left"><a href="' + catalogUrl + '">' +
+            (imgSrc ? '<img src="' + imgSrc + '" alt="' + title.replace(/"/g, '&quot;') + '" class="cart-item-image">' : '<div class="cart-item-noimage">Курс</div>') +
+            '</a></div><div class="cart-item-right"><h3 class="product-name"><a href="' + catalogUrl + '">' + title.replace(/</g, '&lt;') + '</a></h3>' +
+            '<div class="product-price">' + unitPrice + ' ₽</div><div class="quantity-course">1 шт</div>' +
+            '<div class="product-subtotal" id="subtotal-' + item.id + '"><strong>' + subtotal + ' ₽</strong></div>' +
+            '<button type="button" class="btn-danger remove-item-btn" data-item-id="' + item.id + '">Удалить</button></div>';
+        container.appendChild(div);
+    });
+}
+
+async function loadCart() {
+    const loading = document.getElementById('cart-loading');
+    try {
+        const response = await fetch('/api/cart/', {
+            method: 'GET',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            credentials: 'same-origin'
+        });
+        if (response.status === 401) {
+            loading.style.display = 'none';
+            document.getElementById('cart-empty').textContent = 'Войдите, чтобы видеть корзину';
+            document.getElementById('cart-empty').style.display = 'block';
+            return;
+        }
+        const data = await response.json();
+        renderCart(data);
+    } catch(err) {
+        loading.style.display = 'none';
+        document.getElementById('cart-empty').textContent = 'Ошибка загрузки корзины';
+        document.getElementById('cart-empty').style.display = 'block';
+    }
+}
+
+document.getElementById('cart-container').addEventListener('click', async function(e) {
+    const btn = e.target.closest('.remove-item-btn');
+    if (!btn) return;
+    const itemId = btn.dataset.itemId;
+    if (!confirm('Удалить товар из корзины?')) return;
+    try {
+        const response = await fetch('/api/cart/items/' + itemId + '/', {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            credentials: 'same-origin'
+        });
+        if (response.ok || response.status === 204) {
+            const cartItem = btn.closest('.cart-item');
+            if (cartItem) cartItem.remove();
+            const remaining = document.querySelectorAll('.cart-item');
+            if (remaining.length === 0) {
+                document.getElementById('cart-container').style.display = 'none';
+                document.getElementById('cart-summary').style.display = 'none';
+                document.getElementById('cart-empty').style.display = 'block';
+                document.getElementById('cart-empty').textContent = 'Ваша корзина пуста';
+            } else {
+                loadCart();
+            }
+        } else {
+            const result = await response.json();
+            alert(result.error || 'Ошибка при удалении');
+        }
+    } catch(err) {
+        alert('Ошибка соединения: ' + err.message);
+    }
+});
+
+loadCart();
+</script>
+{% endblock %}

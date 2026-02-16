@@ -1,0 +1,387 @@
+/* =================== СТИЛИ ДЛЯ ПРОФИЛЯ =================== */
+
+.profile-content {
+    display: flex;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+.profile-container {
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--bg-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 40px 30px;
+    text-align: center;
+    font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+/* Уведомления в профиле (левый нижний угол) */
+.profile-notifications {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    width: 320px;
+    max-width: calc(100% - 40px);
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    overflow: hidden;
+    z-index: 1100;
+}
+
+.profile-notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #000;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.profile-notifications-list {
+    max-height: 280px;
+    overflow: auto;
+}
+
+.notification-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-empty {
+    padding: 12px;
+    font-size: 14px;
+    color: var(--text-color-secondary);
+}
+
+/* Плавающая кнопка-колокол (слева внизу) */
+.notifications-bell {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1101;
+    border: 1px solid #000000;
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    padding: 0;
+}
+
+.notifications-bell:hover {
+    filter: brightness(90%);
+}
+
+.notifications-bell svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+}
+
+/* Крестик для закрытия */
+.notifications-close-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.notifications-close-btn:hover {
+    opacity: 0.7;
+}
+
+/* Заголовок */
+.profile-container h2 {
+    margin-bottom: 30px;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+/* Информация о пользователе */
+.profile-info {
+    margin-bottom: 32px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-color-secondary);
+}
+
+.profile-info p {
+    margin: 6px 0;
+}
+
+/* Кнопки */
+.buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn {
+    width: 100%;
+    padding: 10px 0;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 15px;
+    border: 1px solid;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    transition: all 0.2s ease;
+}
+
+/* Светлая тема: чёрные кнопки с белым текстом */
+body.light .btn {
+    background-color: #000000;
+    color: #ffffff;
+    border-color: #000000;
+}
+
+/* Тёмная тема: светлые кнопки с чёрным текстом */
+body.dark .btn {
+    background-color: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+}
+
+/* Hover эффект */
+.btn:hover {
+    filter: brightness(90%);
+}
+
+/* Кнопка удаления */
+.btn.danger {
+    border-color: var(--text-color);
+    color: var(--text-color);
+}
+
+.btn.danger:hover {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 768px) {
+    .profile-content {
+        padding: 50px 15px;
+    }
+    
+    .profile-container {
+        padding: 30px 20px;
+    }
+    
+    .profile-container h2 {
+        font-size: 22px;
+    }
+    
+    .profile-info {
+        font-size: 15px;
+    }
+    
+    .profile-notifications {
+        left: 10px;
+        bottom: 10px;
+        width: calc(100% - 20px);
+        max-width: calc(100% - 20px);
+    }
+    
+    .notifications-bell {
+        left: 10px;
+        bottom: 10px;
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-content {
+        padding: 40px 10px;
+    }
+    
+    .profile-container {
+        padding: 24px 16px;
+        border-radius: 8px;
+    }
+    
+    .profile-container h2 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .profile-info {
+        font-size: 14px;
+        margin-bottom: 24px;
+    }
+    
+    .buttons {
+        gap: 10px;
+    }
+    
+    .btn {
+        padding: 12px 0;
+        font-size: 14px;
+    }
+    
+    .profile-notifications {
+        left: 5px;
+        bottom: 5px;
+        width: calc(100% - 10px);
+        max-width: calc(100% - 10px);
+        border-radius: 8px;
+    }
+    
+    .profile-notifications-header {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .notification-item {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .notifications-bell {
+        left: 5px;
+        bottom: 5px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .notifications-bell svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* Встроенный PDF-ридер (PDF.js) */
+.pdf-viewer-container {
+    width: 100%;
+    min-height: 70vh;
+    background: var(--surface, #f5f5f5);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.pdf-viewer-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+    flex-wrap: wrap;
+}
+.pdf-viewer-pages {
+    font-size: 14px;
+    color: var(--text-color-secondary);
+    font-weight: 500;
+    min-width: 120px;
+}
+.pdf-viewer-nav { display: flex; gap: 6px; }
+.pdf-viewer-btn {
+    padding: 10px 16px;
+    border: 1px solid #d0d0d0;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color);
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.pdf-viewer-btn:hover:not(:disabled) {
+    background: #f0f0f0;
+    border-color: #999;
+    transform: translateY(-1px);
+}
+.pdf-viewer-btn:active:not(:disabled) { transform: translateY(0); }
+.pdf-viewer-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pdf-viewer-arrow { display: inline-block; line-height: 1; }
+.pdf-viewer-zoom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: auto;
+}
+.pdf-viewer-zoom .pdf-viewer-btn { padding: 8px 14px; font-size: 18px; }
+.pdf-viewer-scale {
+    min-width: 48px;
+    text-align: center;
+    color: var(--text-color-secondary);
+}
+.pdf-viewer-canvas-wrap {
+    padding: 20px;
+    overflow: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 12px 12px;
+    text-align: center;
+    min-height: 60vh;
+    background: #fff;
+}
+.pdf-viewer-canvas { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.pdf-viewer-error { padding: 24px; color: var(--text-color-secondary); }
+.pdf-viewer-error a { color: var(--text-color); }
+
+/* Кнопка загрузки файла в форме урока */
+.lesson-upload-btn {
+    display: block;
+    margin-top: 8px;
+    padding: 12px 20px;
+    width: 100%;
+    max-width: 280px;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
+    color: var(--text-color);
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.lesson-upload-btn:hover {
+    border-color: #666;
+    background: #f0f0f0;
+}
+.lesson-upload-btn::file-selector-button {
+    padding: 8px 16px;
+    margin-right: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--text-color, #1a1a1a);
+    color: var(--bg-color, #fff);
+    font-weight: 600;
+    cursor: pointer;
+}
+

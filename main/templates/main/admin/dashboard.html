@@ -1,0 +1,164 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Панель администратора - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Панель администратора</h1>
+        <div class="dashboard-actions">
+            <a href="{% url 'profile' %}">В профиль</a>
+            <a href="/admin/">Django Admin</a>
+        </div>
+    </div>
+
+    <!-- Блок с подсказками о горячих клавишах -->
+    <div class="shortcuts-info-card" style="background: var(--bg-color); border: 1px solid var(--border, #000); border-radius: 10px; padding: 20px; margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <span>⌨️</span>
+                <span>Горячие клавиши</span>
+            </h3>
+            <span style="font-size: 12px; color: var(--text-color-secondary);">Нажмите <kbd style="background: var(--surface, #f5f5f5); color: var(--text-color); border: 1px solid var(--border, #ccc); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 11px; font-weight: 600;">Ctrl+Alt+?</kbd> для справки</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div class="shortcut-hint-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface, #f5f5f5); border-radius: 6px;">
+                <span style="font-size: 20px;">📊</span>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Панель управления</div>
+                    <kbd style="background: var(--bg-color, #fff); color: var(--text-color); border: 1px solid var(--border, #ccc); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 10px; font-weight: 600; margin-top: 4px; display: inline-block;">Ctrl+Alt+1</kbd>
+                </div>
+            </div>
+            <div class="shortcut-hint-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface, #f5f5f5); border-radius: 6px;">
+                <span style="font-size: 20px;">📦</span>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Промокоды</div>
+                    <kbd style="background: var(--bg-color, #fff); color: var(--text-color); border: 1px solid var(--border, #ccc); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 10px; font-weight: 600; margin-top: 4px; display: inline-block;">Ctrl+Alt+2</kbd>
+                </div>
+            </div>
+            <div class="shortcut-hint-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface, #f5f5f5); border-radius: 6px;">
+                <span style="font-size: 20px;">🛒</span>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Список заказов</div>
+                    <kbd style="background: var(--bg-color, #fff); color: var(--text-color); border: 1px solid var(--border, #ccc); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 10px; font-weight: 600; margin-top: 4px; display: inline-block;">Ctrl+Alt+3</kbd>
+                </div>
+            </div>
+            <div class="shortcut-hint-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface, #f5f5f5); border-radius: 6px;">
+                <span style="font-size: 20px;">👥</span>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Список пользователей</div>
+                    <kbd style="background: var(--bg-color, #fff); color: var(--text-color); border: 1px solid var(--border, #ccc); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 10px; font-weight: 600; margin-top: 4px; display: inline-block;">Ctrl+Alt+4</kbd>
+                </div>
+            </div>
+            <div class="shortcut-hint-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface, #f5f5f5); border-radius: 6px;">
+                <span style="font-size: 20px;">📈</span>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Аналитика и отчёты</div>
+                    <kbd style="background: var(--bg-color, #fff); color: var(--text-color); border: 1px solid var(--border, #ccc); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 10px; font-weight: 600; margin-top: 4px; display: inline-block;">Ctrl+Alt+5</kbd>
+                </div>
+            </div>
+            <div class="shortcut-hint-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface, #f5f5f5); border-radius: 6px;">
+                <span style="font-size: 20px;">➕</span>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Бэкапы БД</div>
+                    <kbd style="background: var(--bg-color, #fff); color: var(--text-color); border: 1px solid var(--border, #ccc); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 10px; font-weight: 600; margin-top: 4px; display: inline-block;">Ctrl+Alt+6</kbd>
+                </div>
+            </div>
+            <div class="shortcut-hint-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface, #f5f5f5); border-radius: 6px;">
+                <span style="font-size: 20px;">💬</span>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Поддержка</div>
+                    <kbd style="background: var(--bg-color, #fff); color: var(--text-color); border: 1px solid var(--border, #ccc); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 10px; font-weight: 600; margin-top: 4px; display: inline-block;">Ctrl+Alt+7</kbd>
+                </div>
+            </div>
+            <div class="shortcut-hint-item" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface, #f5f5f5); border-radius: 6px;">
+                <span style="font-size: 20px;">💾</span>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-color);">Резервные копии</div>
+                    <kbd style="background: var(--bg-color, #fff); color: var(--text-color); border: 1px solid var(--border, #ccc); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 10px; font-weight: 600; margin-top: 4px; display: inline-block;">Ctrl+Alt+B</kbd>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 32px;">
+        <div class="dashboard-card">
+            <h3>{{ stats.total_users }}</h3>
+            <p>Всего пользователей</p>
+        </div>
+        <div class="dashboard-card">
+            <h3>{{ stats.total_courses }}</h3>
+            <p>Всего курсов</p>
+        </div>
+        <div class="dashboard-card">
+            <h3>{{ stats.total_orders }}</h3>
+            <p>Всего заказов</p>
+        </div>
+        <div class="dashboard-card">
+            <h3>{{ stats.total_tickets }}</h3>
+            <p>Всего обращений</p>
+        </div>
+        <div class="dashboard-card">
+            <h3>{{ stats.new_tickets }}</h3>
+            <p>Новых обращений</p>
+        </div>
+        <div class="dashboard-card">
+            <h3>{{ stats.recent_activity }}</h3>
+            <p>Действий за неделю</p>
+        </div>
+        <div class="dashboard-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3>{{ stats.org_balance }} ₽</h3>
+            <p>Баланс организации</p>
+        </div>
+        <div class="dashboard-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <h3>{{ stats.org_tax_reserve }} ₽</h3>
+            <p>Резерв на налоги</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        {% for block in blocks %}
+        <div class="dashboard-card" style="padding: 24px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-color); transition: transform 0.2s, box-shadow 0.2s;">
+            <h3 style="margin: 0 0 12px 0; font-size: 20px; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 24px;">{{ block.icon }}</span>
+                {{ block.title }}
+            </h3>
+            <p style="margin: 0 0 16px 0; color: var(--text-color-secondary); font-size: 14px; line-height: 1.5;">{{ block.desc }}</p>
+            {% if block.external %}
+                {% if block.direct_url %}
+                    <a href="{{ block.url }}" class="btn" target="_blank" rel="noopener noreferrer">Открыть <span style="font-size: 12px;">↗</span></a>
+                {% else %}
+                    <a href="{% url block.url %}" class="btn" target="_blank" rel="noopener noreferrer">Открыть <span style="font-size: 12px;">↗</span></a>
+                {% endif %}
+            {% else %}
+                <a href="{% url block.url %}" class="btn">Открыть</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if stats.recent_logs %}
+    <div class="data-section">
+        <h3>Последние действия</h3>
+        <ul class="data-list">
+            {% for log in stats.recent_logs %}
+            <li class="log-item">
+                <strong>{{ log.user.username|default:"Система" }}</strong> - 
+                {{ log.action_description|default:log.action_type }} 
+                <span style="color: var(--text-color-secondary); font-size: 12px;">
+                    ({{ log.created_at|date:"d.m.Y H:i" }})
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

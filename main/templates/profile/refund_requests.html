@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои заявления на возврат - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<style>
+.orders-content { padding: 60px 20px; max-width: 900px; margin: 0 auto; }
+.orders-header { margin-bottom: 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.orders-header h1 { font-size: 26px; margin: 0; font-weight: 600; }
+.orders-header .back-link { color: var(--text-color); text-decoration: none; font-size: 14px; }
+.orders-header .back-link:hover { text-decoration: underline; }
+.refund-table { width: 100%; border-collapse: collapse; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+.refund-table th, .refund-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-color); }
+.refund-table th { background: var(--surface); font-weight: 600; }
+.refund-table tr:last-child td { border-bottom: none; }
+.refund-table .status-pending { color: var(--text-color); }
+.refund-table .status-approved { font-weight: 600; }
+.refund-table .status-rejected { opacity: 0.85; }
+.refund-table .refund-pdf-buttons { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.refund-table .btn-pdf { padding: 6px 12px; font-size: 13px; text-decoration: none; display: inline-block; border-radius: 6px; border: 1px solid var(--border-color); background: var(--btn-bg); color: var(--btn-text); }
+.refund-table .btn-pdf:hover { opacity: 0.92; }
+.empty-block { padding: 32px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-color); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-content">
+    <div class="orders-content">
+        <div class="orders-header">
+            <a href="{% url 'profile' %}" class="back-link">← В профиль</a>
+            <h1>Мои заявления на возврат</h1>
+        </div>
+        <p style="margin-bottom: 24px; color: var(--text-color);">Ниже — история ваших заявлений на возврат средств за курсы. Вы можете открыть или скачать заявление в PDF.</p>
+
+        {% if refunds %}
+        <table class="refund-table">
+            <thead>
+                <tr>
+                    <th>№ заявления</th>
+                    <th>Курс</th>
+                    <th>Сумма</th>
+                    <th>Дата подачи</th>
+                    <th>Статус</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in refunds %}
+                <tr>
+                    <td><strong>{{ r.refund_number }}</strong></td>
+                    <td>{{ r.course_purchase.course.title }}</td>
+                    <td>{{ r.amount }} ₽</td>
+                    <td>{{ r.created_at|date:"d.m.Y H:i" }}</td>
+                    <td class="status-{{ r.status }}">
+                        {% if r.status == 'pending' %}На рассмотрении
+                        {% elif r.status == 'approved' %}Одобрен
+                        {% elif r.status == 'rejected' %}Отклонён
+                        {% else %}{{ r.status }}{% endif %}
+                    </td>
+                    <td>
+                        <div class="refund-pdf-buttons">
+                            <a href="{% url 'refund_request_pdf' r.id %}" class="btn-pdf" target="_blank">Открыть PDF</a>
+                            <a href="{% url 'refund_request_pdf' r.id %}?download=1" class="btn-pdf">Скачать PDF</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-block">У вас пока нет заявлений на возврат.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

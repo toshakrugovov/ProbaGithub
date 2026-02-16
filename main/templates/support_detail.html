@@ -1,0 +1,46 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Обращение #{{ ticket.id }} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/support.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="support-page">
+    <h1 class="support-title">Обращение #{{ ticket.id }}</h1>
+    
+    <div class="ticket-detail">
+        <div class="ticket-header">
+            <div class="ticket-info">
+                <h2 class="ticket-subject">{{ ticket.subject }}</h2>
+                <span class="ticket-date">Создано: {{ ticket.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            <span class="ticket-status status-{{ ticket.ticket_status }}">{{ ticket.get_status_display|default:ticket.ticket_status }}</span>
+        </div>
+        
+        <div class="ticket-message-full">
+            <h3>Ваше сообщение:</h3>
+            <p>{{ ticket.message_text|linebreaks }}</p>
+        </div>
+        
+        {% if ticket.response_text %}
+        <div class="ticket-response-full">
+            <h3>Ответ поддержки:</h3>
+            <p>{{ ticket.response_text|linebreaks }}</p>
+        </div>
+        {% else %}
+        <div class="ticket-waiting">
+            <p>Ожидайте ответа от службы поддержки. Мы свяжемся с вами в ближайшее время.</p>
+        </div>
+        {% endif %}
+        
+        <div class="ticket-actions">
+            <a href="{% url 'support' %}" class="btn-back">← Вернуться к списку обращений</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

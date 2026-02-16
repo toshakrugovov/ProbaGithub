@@ -1,0 +1,45 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Удаление базы данных - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="confirm-wrap">
+    <div class="confirm-box">
+        <h1>🗑️ Очистка базы данных</h1>
+        <p class="form-error" style="font-weight: 600; font-size: 18px;">⚠️ ОПАСНАЯ ОПЕРАЦИЯ!</p>
+        <div style="background: var(--surface); padding: 16px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid var(--input-border);">
+            <p style="margin: 0; color: var(--text); font-weight: 600;">Это действие очистит все таблицы базы данных!</p>
+            <ul style="margin: 12px 0 0 0; padding-left: 20px; color: var(--text);">
+                <li>Все данные из таблиц будут безвозвратно удалены</li>
+                <li>Структура таблиц сохранится (сервер не упадёт)</li>
+                <li>Сайт будет показывать ошибку 500 до восстановления из бэкапа</li>
+                <li>Используйте эту функцию только для тестирования восстановления</li>
+                <li>Убедитесь, что у вас есть актуальный бэкап перед очисткой</li>
+            </ul>
+        </div>
+        <p class="form-error" style="font-weight: 600; font-size: 16px;">После очистки таблиц вы сможете восстановить данные из бэкапа через страницу ошибки 500.</p>
+        <div style="background: var(--surface); padding: 12px; border-radius: 6px; margin-top: 16px; border-left: 4px solid var(--input-border);">
+            <p style="margin: 0; color: var(--text); font-weight: 600; font-size: 14px;">💡 Информация о восстановлении:</p>
+            <p style="margin: 8px 0 0 0; color: var(--text); font-size: 12px;">
+                После очистки таблиц:<br>
+                1. Сайт будет показывать страницу ошибки 500<br>
+                2. На странице ошибки 500 будет доступна функция восстановления из бэкапа<br>
+                3. Выберите бэкап и восстановите данные<br>
+                4. После восстановления сайт вернётся в рабочее состояние со всеми данными
+            </p>
+        </div>
+        <form method="post" class="confirm-actions">
+            {% csrf_token %}
+            <button type="submit" class="btn">Да, очистить все таблицы</button>
+            <a href="{% url 'admin_backups_list' %}">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

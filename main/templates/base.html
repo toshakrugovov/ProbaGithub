@@ -1,0 +1,140 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MPTCOURSE{% endblock %}</title>
+    <!-- Google Fonts отключены из-за проблем с прокси -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header-footer.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body data-is-admin="{% if user.is_authenticated %}{% if user.is_superuser %}true{% else %}{% with role_name=user.profile.role.role_name|default:''|upper %}{% if role_name == 'ADMIN' %}true{% else %}false{% endif %}{% endwith %}{% endif %}{% else %}false{% endif %}">
+    <div class="page">
+        {% include 'partials/navbar.html' %}
+        <main class="page-content">
+            {% block content %}{% endblock %}
+        </main>
+        {% include 'partials/footer.html' %}
+    </div>
+
+    <script>
+        (function() {
+            try {
+                var isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+                
+                // Функция для применения темы
+                function applyTheme(isDark) {
+                    document.body.classList.toggle('dark-theme', isDark);
+                }
+                
+                // Функция для получения CSRF токена
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                
+                // Функция для сохранения темы
+                function saveTheme(theme) {
+                    // Сохраняем в localStorage для быстрого доступа
+                    localStorage.setItem('theme', theme);
+                    
+                    // Сохраняем на сервере, если пользователь авторизован
+                    if (isAuthenticated) {
+                        fetch('/api/settings/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ theme: theme }),
+                            credentials: 'same-origin'
+                        }).catch(function(err) {
+                            console.warn('Не удалось сохранить тему на сервере:', err);
+                        });
+                    }
+                }
+                
+                // Загружаем тему
+                var isDark = false;
+                
+                if (isAuthenticated) {
+                    // Если пользователь авторизован - загружаем с сервера
+                    fetch('/api/settings/', {
+                        method: 'GET',
+                        credentials: 'same-origin'
+                    })
+                    .then(function(response) {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Network response was not ok');
+                    })
+                    .then(function(data) {
+                        if (data.success && data.settings) {
+                            var theme = data.settings.theme;
+                            if (theme === 'auto') {
+                                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                                isDark = prefersDark;
+                            } else {
+                                isDark = theme === 'dark';
+                            }
+                            applyTheme(isDark);
+                            // Синхронизируем с localStorage
+                            localStorage.setItem('theme', theme);
+                        } else {
+                            // Если настройки не найдены, используем localStorage
+                            var stored = localStorage.getItem('theme');
+                            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                            isDark = stored ? stored === 'dark' : prefersDark;
+                            applyTheme(isDark);
+                        }
+                    })
+                    .catch(function(err) {
+                        // При ошибке используем localStorage
+                        console.warn('Не удалось загрузить настройки с сервера:', err);
+                        var stored = localStorage.getItem('theme');
+                        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        isDark = stored ? stored === 'dark' : prefersDark;
+                        applyTheme(isDark);
+                    });
+                } else {
+                    // Если не авторизован - используем localStorage
+                    var stored = localStorage.getItem('theme');
+                    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    isDark = stored ? stored === 'dark' : prefersDark;
+                    applyTheme(isDark);
+                }
+                
+                // Обработчик переключения темы
+                document.addEventListener('click', function(e){
+                    var btn = e.target.closest('.theme-toggle');
+                    if (!btn) return;
+                    var nowDark = !document.body.classList.contains('dark-theme');
+                    applyTheme(nowDark);
+                    var theme = nowDark ? 'dark' : 'light';
+                    saveTheme(theme);
+                });
+            } catch (e) {
+                console.error('Ошибка при работе с темой:', e);
+            }
+        })();
+    </script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/admin-shortcuts.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

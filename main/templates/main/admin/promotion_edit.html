@@ -1,0 +1,121 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if promotion %}Редактирование{% else %}Добавление{% endif %} промокода - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <div class="form-container">
+        <h2>{% if promotion %}Редактирование{% else %}Добавление{% endif %} промокода</h2>
+        <form id="promotion-form">
+            {% csrf_token %}
+            <div id="form-error" class="form-error" style="display: none; margin-bottom: 16px;"></div>
+            
+            <div class="form-group">
+                <label>Код промокода *</label>
+                <input type="text" name="promo_code" value="{{ promotion.promo_code|default:'' }}" required placeholder="SUMMER2024" style="text-transform:uppercase;">
+                <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Код будет автоматически преобразован в верхний регистр</div>
+            </div>
+
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea name="promo_description" placeholder="Описание промокода...">{{ promotion.promo_description|default:'' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Скидка (%) *</label>
+                <input type="number" name="discount" id="discount" value="{{ promotion.discount|default:0 }}" min="0" max="100" step="0.01" required>
+                <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Процент скидки от 0 до 100</div>
+                {% if promotion %}
+                <div style="font-size:12px; color:var(--primary-color); margin-top:4px; font-weight:600;">
+                    Текущая скидка: {{ promotion.discount }}%
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label>Дата начала действия</label>
+                <input type="date" name="start_date" value="{{ promotion.start_date|date:'Y-m-d'|default:'' }}">
+                <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Оставьте пустым, если промокод действует с момента создания</div>
+            </div>
+
+            <div class="form-group">
+                <label>Дата окончания действия</label>
+                <input type="date" name="end_date" value="{{ promotion.end_date|date:'Y-m-d'|default:'' }}">
+                <div style="font-size:12px; color:var(--text-color-secondary); margin-top:4px;">Оставьте пустым, если промокод действует бессрочно</div>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_active" id="is_active" {% if not promotion or promotion.is_active %}checked{% endif %}>
+                    Активен
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" id="submit-btn">{% if promotion %}Сохранить{% else %}Создать{% endif %}</button>
+                <a href="{% url 'admin_promotions_list' %}">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('promotion-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const errorDiv = document.getElementById('form-error');
+    const submitBtn = document.getElementById('submit-btn');
+    errorDiv.style.display = 'none';
+    
+    const data = {
+        promo_code: document.querySelector('input[name="promo_code"]').value.trim().toUpperCase(),
+        promo_description: document.querySelector('textarea[name="promo_description"]').value.trim(),
+        discount: parseFloat(document.getElementById('discount').value) || 0,
+        is_active: document.getElementById('is_active').checked
+    };
+    
+    const startDate = document.querySelector('input[name="start_date"]').value;
+    if (startDate) {
+        data.start_date = startDate;
+    }
+    
+    const endDate = document.querySelector('input[name="end_date"]').value;
+    if (endDate) {
+        data.end_date = endDate;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Сохранение...';
+    
+    try {
+        {% if promotion %}
+        const result = await ManagementAPI.promotions.update({{ promotion.id }}, data);
+        {% else %}
+        const result = await ManagementAPI.promotions.create(data);
+        {% endif %}
+        
+        if (result.success) {
+            alert(result.message || 'Промокод успешно сохранен');
+            window.location.href = '{% url "admin_promotions_list" %}';
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при сохранении промокода';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = '{% if promotion %}Сохранить{% else %}Создать{% endif %}';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = '{% if promotion %}Сохранить{% else %}Создать{% endif %}';
+    }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Оценка урока — {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<style>
+.feedback-wrap { max-width: 520px; margin: 0 auto; padding: 32px 24px; text-align: center; }
+.feedback-wrap .back-link { display: inline-block; margin-bottom: 20px; font-size: 14px; color: var(--text-color-secondary); text-decoration: none; }
+.feedback-wrap .back-link:hover { text-decoration: underline; }
+.feedback-wrap h1 { font-size: 22px; margin-bottom: 8px; }
+.feedback-wrap .lesson-title { font-size: 16px; color: var(--text-color-secondary); margin-bottom: 24px; display: block; }
+.feedback-wrap p { color: var(--text-color-secondary); margin-bottom: 20px; }
+.feedback-buttons { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.feedback-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 24px; font-size: 16px; border-radius: 10px; text-decoration: none;
+    border: 2px solid var(--border-color); background: var(--bg-color); color: var(--text-color);
+    cursor: pointer; transition: border-color 0.2s, background 0.2s; font-family: inherit;
+}
+.feedback-btn:hover { border-color: var(--text-color); background: var(--surface, #f5f5f5); }
+.feedback-btn.like { border-color: var(--text-color); color: var(--text-color); }
+.feedback-btn.like:hover { background: var(--surface, #f5f5f5); }
+.feedback-btn.dislike { border-color: var(--border-color); color: var(--text-color); }
+.feedback-btn.dislike:hover { background: var(--surface, #f5f5f5); }
+.feedback-btn.selected.like { background: var(--text-color); color: var(--bg-color); border-color: var(--text-color); }
+.feedback-btn.selected.dislike { background: var(--text-color-secondary, #666); color: var(--bg-color); border-color: var(--text-color-secondary); }
+.feedback-wrap .feedback-hint { font-size: 14px; color: var(--text-color-secondary); margin-bottom: 16px; }
+.feedback-wrap .btn-submit { background: var(--text-color); color: var(--bg-color); border-color: var(--text-color); }
+.feedback-wrap .btn-submit:hover { opacity: 0.9; }
+.feedback-wrap .review-label { display: block; text-align: left; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+.feedback-wrap textarea { width: 100%; min-height: 100px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; resize: vertical; font-family: inherit; }
+.feedback-wrap .hint { font-size: 13px; color: var(--text-color-secondary); margin-bottom: 16px; }
+.feedback-wrap .btn-back { display: inline-block; padding: 12px 24px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); text-decoration: none; font-size: 15px; }
+.feedback-wrap .btn-back:hover { background: var(--surface, #f5f5f5); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-content">
+    <div class="feedback-wrap">
+        <a href="{% url 'course_lessons_list' purchase_id=purchase.id %}" class="back-link">← К списку уроков</a>
+        <h1>Понравился ли вам урок?</h1>
+        <span class="lesson-title">Урок: {{ lesson.title|default:"Урок" }}</span>
+        <p>Ваша оценка поможет улучшить материал. Урок уже отмечен как пройденный.</p>
+        <form method="post" action="" id="feedbackForm">
+            {% csrf_token %}
+            <input type="hidden" name="liked" id="likedInput" value="">
+            <p class="feedback-hint">Выберите оценку, при желании добавьте комментарий и нажмите «Отправить».</p>
+            <div class="feedback-buttons" id="ratingButtons">
+                <button type="button" class="feedback-btn like" data-liked="1" aria-pressed="false">👍 Да, понравился</button>
+                <button type="button" class="feedback-btn dislike" data-liked="0" aria-pressed="false">👎 Нет</button>
+            </div>
+            <label class="review-label">Комментарий (необязательно)</label>
+            <textarea name="review_text" id="reviewText" placeholder="Напишите, что понравилось или что улучшить...">{{ completion.review_text|default:'' }}</textarea>
+            <div class="feedback-buttons">
+                <button type="submit" class="feedback-btn btn-submit">Отправить</button>
+            </div>
+        </form>
+        <p class="hint">Можно не выбирать оценку — просто вернуться к списку уроков.</p>
+        <a href="{% url 'course_lessons_list' purchase_id=purchase.id %}" class="btn-back">Вернуться к списку уроков</a>
+    </div>
+</div>
+<script>
+(function() {
+    var form = document.getElementById('feedbackForm');
+    var likedInput = document.getElementById('likedInput');
+    var ratingButtons = document.querySelectorAll('#ratingButtons .feedback-btn[data-liked]');
+
+    // Предзаполнение, если уже есть оценка
+    var initialLiked = '{{ completion.liked|yesno:"1,0," }}';
+    if (initialLiked !== '') {
+        likedInput.value = initialLiked;
+        ratingButtons.forEach(function(btn) {
+            if (btn.getAttribute('data-liked') === initialLiked) {
+                btn.classList.add('selected');
+                btn.setAttribute('aria-pressed', 'true');
+            }
+        });
+    }
+
+    ratingButtons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var value = this.getAttribute('data-liked');
+            likedInput.value = value;
+            ratingButtons.forEach(function(b) {
+                b.classList.remove('selected');
+                b.setAttribute('aria-pressed', 'false');
+            });
+            this.classList.add('selected');
+            this.setAttribute('aria-pressed', 'true');
+        });
+    });
+})();
+</script>
+{% endblock %}

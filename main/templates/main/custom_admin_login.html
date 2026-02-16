@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Секретный вход в админку</title>
+</head>
+<body>
+    <h1>Войти в систему MPTCOURSE</h1>
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color:red;" class="django-message" data-message="{{ message }}">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const messages = document.querySelectorAll('.django-message');
+        messages.forEach(function(msg) {
+          const messageText = msg.getAttribute('data-message') || msg.textContent;
+          if (messageText.includes('https://t.me/toshaplenka')) {
+            msg.innerHTML = messageText.replace('https://t.me/toshaplenka', '<a href="https://t.me/toshaplenka" target="_blank" rel="noopener noreferrer" class="link-accent">https://t.me/toshaplenka</a>');
+          }
+        });
+      });
+    </script>
+    <form method="post">
+        {% csrf_token %}
+        <label>Message:</label><br>
+        <input type="text" name="message" required><br><br>
+        <label>Secret code:</label><br>
+        <input type="text" name="secret_code" required><br><br>
+        <button type="submit">Войти</button>
+        <button type="button" onclick="window.location.href='/'">Отмена</button>
+    </form>
+</body>
+</html>

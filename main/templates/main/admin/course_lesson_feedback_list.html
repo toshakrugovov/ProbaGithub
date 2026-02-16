@@ -1,0 +1,82 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Отзывы по курсу «{{ course.title }}» — Панель администратора{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<style>
+.feedback-list-header { margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.feedback-list-header h1 { font-size: 22px; margin: 0; }
+.feedback-list-header .back-link { color: var(--text-color-secondary); text-decoration: none; font-size: 14px; }
+.feedback-list-header .back-link:hover { text-decoration: underline; }
+.feedback-item {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+.feedback-item-header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 14px; }
+.feedback-item-header .user { font-weight: 600; }
+.feedback-item-header .lesson { color: var(--text-color-secondary); }
+.feedback-item-header .rating { font-size: 16px; }
+.feedback-item-header .date { color: var(--text-color-secondary); font-size: 13px; }
+.feedback-review-block { margin: 12px 0; padding: 12px; background: var(--surface, #f9f9f9); border-radius: 8px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+.feedback-review-block.empty { color: var(--text-color-secondary); font-style: italic; }
+.feedback-reply-block { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+.feedback-reply-block label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; }
+.feedback-reply-block textarea { width: 100%; min-height: 80px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-family: inherit; resize: vertical; }
+.feedback-reply-block .btn-save { margin-top: 10px; padding: 10px 20px; border-radius: 8px; border: 1px solid var(--text-color); background: var(--text-color); color: var(--bg-color); font-weight: 600; cursor: pointer; font-size: 14px; }
+.feedback-reply-block .btn-save:hover { opacity: 0.9; }
+.feedback-admin-comment { margin-top: 8px; padding: 10px; background: var(--surface, #f5f5f5); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+.feedback-admin-comment-meta { font-size: 12px; color: var(--text-color-secondary); margin-top: 4px; }
+.feedback-empty-list { text-align: center; padding: 48px 24px; color: var(--text-color-secondary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="feedback-list-header">
+        <div>
+            <a href="{% url 'admin_lesson_feedback_stats' %}" class="back-link">← К оценкам по курсам</a>
+            <h1>Отзывы по курсу «{{ course.title }}»</h1>
+        </div>
+    </div>
+
+    {% if completions %}
+    {% for c in completions %}
+    <div class="feedback-item">
+        <div class="feedback-item-header">
+            <span class="user">{{ c.course_purchase.user.get_full_name|default:c.course_purchase.user.username }}</span>
+            <span class="lesson">Урок: {{ c.lesson.title|default:"—" }}</span>
+            <span class="rating">
+                {% if c.liked == True %}👍 Понравилось{% elif c.liked == False %}👎 Не понравилось{% else %}— Без оценки{% endif %}
+            </span>
+            <span class="date">{{ c.completed_at|date:"d.m.Y H:i" }}</span>
+        </div>
+        <div class="feedback-review-block {% if not c.review_text %}empty{% endif %}">
+            {{ c.review_text|default:"Пользователь не оставил текстовый отзыв." }}
+        </div>
+        <div class="feedback-reply-block">
+            {% if c.admin_comment %}
+            <div class="feedback-admin-comment">{{ c.admin_comment }}</div>
+            {% if c.admin_comment_at %}
+            <div class="feedback-admin-comment-meta">Ответ дан {{ c.admin_comment_at|date:"d.m.Y H:i" }}</div>
+            {% endif %}
+            {% endif %}
+            <form method="post" action="{% url 'admin_lesson_completion_comment' completion_id=c.id %}">
+                {% csrf_token %}
+                <label for="admin_comment_{{ c.id }}">Ваш ответ пользователю</label>
+                <textarea name="admin_comment" id="admin_comment_{{ c.id }}" placeholder="Напишите комментарий — пользователь увидит его в уведомлениях.">{{ c.admin_comment|default:'' }}</textarea>
+                <button type="submit" class="btn-save">Сохранить ответ</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="feedback-empty-list">По этому курсу пока нет отзывов после прохождения уроков.</div>
+    {% endif %}
+</div>
+{% endblock %}

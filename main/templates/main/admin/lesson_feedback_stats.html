@@ -1,0 +1,74 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Оценки уроков по курсам — Панель администратора{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<style>
+.feedback-stats-intro { color: var(--text-color-secondary); margin-bottom: 32px; max-width: 640px; line-height: 1.5; }
+.feedback-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+.feedback-card {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+.feedback-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: var(--text-color-secondary); }
+.feedback-card h3 { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.3; }
+.feedback-stats-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.feedback-stat {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 600;
+    background: var(--surface, #f5f5f5); color: var(--text-color);
+}
+.feedback-stat.liked { background: var(--surface, #f5f5f5); color: var(--text-color); border: 1px solid var(--border-color); }
+.feedback-stat.disliked { background: var(--surface, #f5f5f5); color: var(--text-color); border: 1px solid var(--border-color); }
+.feedback-stat.neutral { background: var(--surface, #f5f5f5); color: var(--text-color-secondary, #666); }
+.feedback-stat.reviews { background: var(--surface, #f5f5f5); color: var(--text-color); border: 1px solid var(--border-color); }
+.feedback-card-actions { margin-top: auto; }
+.feedback-card .btn-primary {
+    display: inline-block; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600;
+    background: var(--text-color); color: var(--bg-color); text-decoration: none; border: 1px solid var(--text-color); cursor: pointer;
+    transition: opacity 0.2s;
+}
+.feedback-card .btn-primary:hover { opacity: 0.9; }
+.feedback-empty { text-align: center; padding: 48px 24px; color: var(--text-color-secondary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header" style="margin-bottom: 16px;">
+        <h1>Оценки уроков по курсам</h1>
+        <a href="{% url 'admin_dashboard' %}">← Назад в панель</a>
+    </div>
+    <p class="feedback-stats-intro">По каждому курсу видно, сколько уроков отмечено «понравился», «не понравился», без оценки и с текстовым отзывом. Нажмите «Отзывы и ответы» — откроется список отзывов, где можно ответить пользователю. Уведомление придёт ему в личный кабинет.</p>
+
+    {% if courses %}
+    <div class="feedback-cards">
+        {% for course in courses %}
+        <div class="feedback-card">
+            <h3>{{ course.title }}</h3>
+            <div class="feedback-stats-row">
+                <span class="feedback-stat liked">👍 {{ course.liked_count|default:0 }}</span>
+                <span class="feedback-stat disliked">👎 {{ course.disliked_count|default:0 }}</span>
+                <span class="feedback-stat neutral">— {{ course.no_rating_count|default:0 }}</span>
+                <span class="feedback-stat reviews">💬 {{ course.with_review_count|default:0 }}</span>
+            </div>
+            <div class="feedback-card-actions">
+                <a href="{% url 'admin_course_lesson_feedback_list' course_id=course.id %}" class="btn-primary">Отзывы и ответы</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="feedback-empty">Нет курсов с уроками.</div>
+    {% endif %}
+</div>
+{% endblock %}

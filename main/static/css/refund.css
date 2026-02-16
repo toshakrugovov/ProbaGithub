@@ -1,0 +1,94 @@
+:root {
+  --footer-gap: 4rem;
+}
+
+.dark-theme {
+  --footer-gap: 4rem;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+
+  margin: 0;
+  padding: 0 1.5rem; /* вот здесь отступы по бокам у всей страницы */
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.text-block {
+  background-color: var(--surface);
+  color: var(--text);
+  border-radius: 20px;
+
+  max-width: 800px;
+  margin: 8rem auto var(--footer-gap);
+
+  padding: 2rem 3rem;
+  box-sizing: border-box;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.text-block a {
+  color: var(--text);
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.text-block a:hover,
+.text-block a:focus {
+  text-decoration: underline;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  body {
+    padding: 0 1rem;
+  }
+  
+  .text-block {
+    margin-top: 6rem;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+  }
+  
+  .text-block h1 {
+    font-size: 1.75rem;
+  }
+  
+  .text-block h2 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 0 0.75rem;
+  }
+  
+  .text-block {
+    margin-top: 5rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 8px;
+  }
+  
+  .text-block h1 {
+    font-size: 1.5rem;
+  }
+  
+  .text-block h2 {
+    font-size: 1.125rem;
+  }
+  
+  .text-block p,
+  .text-block ul {
+    font-size: 0.9rem;
+  }
+}

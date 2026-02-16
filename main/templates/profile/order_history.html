@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои заказы - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+/* === Контейнер истории заказов === */
+.orders-content {
+    padding: 60px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.orders-header {
+    margin-bottom: 30px;
+}
+
+.orders-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.orders-header a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.orders-header a:hover {
+    text-decoration: underline;
+}
+
+/* === Список заказов === */
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.order-card {
+    background-color: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.2s ease;
+}
+
+.order-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.order-info {
+    flex: 1;
+}
+
+.order-number {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.order-date {
+    font-size: 14px;
+    color: var(--text-color-secondary);
+}
+
+.order-status {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.order-status.processing {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.order-status.shipped {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.order-status.delivered {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.order-status.cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.order-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.order-detail-item {
+    font-size: 14px;
+}
+
+.order-detail-label {
+    color: var(--text-color-secondary);
+    margin-bottom: 4px;
+}
+
+.order-detail-value {
+    font-weight: 600;
+}
+
+.order-total {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.order-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+    border: 1px solid;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    border-color: var(--text-color);
+}
+
+.btn-primary:hover {
+    filter: brightness(90%);
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+
+.btn-outline:hover {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+}
+
+.empty-orders {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-orders h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.empty-orders p {
+    color: var(--text-color-secondary);
+    margin-bottom: 24px;
+}
+
+/* Темная тема */
+.dark-theme .order-card {
+    background-color: #1a1a1a;
+    border-color: #000;
+}
+
+.dark-theme .order-status.processing,
+.dark-theme .order-status.shipped {
+    background-color: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--input-border);
+}
+
+.dark-theme .order-status.delivered,
+.dark-theme .order-status.cancelled {
+    background-color: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--input-border);
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+    .orders-content {
+        padding: 40px 15px;
+    }
+    
+    .order-header {
+        flex-direction: column;
+    }
+    
+    .order-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .order-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="orders-content">
+    <div class="orders-header">
+        <h1>Мои заказы</h1>
+        <a href="{% url 'profile' %}">← Вернуться в профиль</a>
+    </div>
+
+    <div id="orders-loading" class="empty-orders">
+        <h2>Загрузка заказов...</h2>
+        <p>Пожалуйста, подождите.</p>
+    </div>
+    <div class="orders-list" id="orders-list" style="display: none;"></div>
+    <div class="empty-orders" id="orders-empty" style="display: none;">
+        <h2>У вас пока нет заказов</h2>
+        <p>Начните делать покупки, чтобы увидеть здесь свои заказы</p>
+        <a href="{% url 'catalog' %}" class="btn btn-primary">Перейти в каталог</a>
+    </div>
+</div>
+
+<script>
+function formatOrderDate(iso) {
+    try {
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso || '';
+        return d.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        return iso || '';
+    }
+}
+
+function getOrderStatusLabel(status) {
+    switch (status) {
+        case 'processing': return 'В обработке';
+        case 'paid': return 'Оплачен';
+        case 'shipped': return 'Отправлен';
+        case 'delivered': return 'Доставлен';
+        case 'cancelled': return 'Отменен';
+        default: return status || '';
+    }
+}
+
+async function loadOrders() {
+    const loadingEl = document.getElementById('orders-loading');
+    const listEl = document.getElementById('orders-list');
+    const emptyEl = document.getElementById('orders-empty');
+    loadingEl.style.display = 'block';
+    listEl.style.display = 'none';
+    emptyEl.style.display = 'none';
+
+    try {
+        const resp = await fetch('/api/orders/', {
+            method: 'GET',
+            credentials: 'same-origin'
+        });
+        if (resp.status === 401) {
+            loadingEl.innerHTML = '<h2>Требуется авторизация</h2><p>Пожалуйста, войдите в систему, чтобы увидеть свои заказы.</p>';
+            return;
+        }
+        const data = await resp.json();
+        const orders = Array.isArray(data) ? data : (data.results || []);
+        loadingEl.style.display = 'none';
+        if (!orders.length) {
+            emptyEl.style.display = 'block';
+            return;
+        }
+        listEl.innerHTML = '';
+        orders.forEach(function(order) {
+            const card = document.createElement('div');
+            card.className = 'order-card';
+            const createdAt = formatOrderDate(order.created_at);
+            const status = order.order_status || '';
+            const statusLabel = getOrderStatusLabel(status);
+            const itemsCount = Array.isArray(order.items) ? order.items.length : (order.items_count || 0);
+            const total = order.total_amount != null ? parseFloat(order.total_amount).toFixed(0) : '0';
+            card.innerHTML =
+                '<div class="order-header">' +
+                    '<div class="order-info">' +
+                        '<div class="order-number">Заказ #' + order.id + '</div>' +
+                        '<div class="order-date">' + createdAt + '</div>' +
+                    '</div>' +
+                    '<div class="order-status ' + status + '">' + statusLabel + '</div>' +
+                '</div>' +
+                '<div class="order-details">' +
+                    '<div class="order-detail-item">' +
+                        '<div class="order-detail-label">Товаров:</div>' +
+                        '<div class="order-detail-value">' + itemsCount + '</div>' +
+                    '</div>' +
+                    '<div class="order-detail-item">' +
+                        '<div class="order-detail-label">Сумма заказа:</div>' +
+                        '<div class="order-total">' + total + ' ₽</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="order-actions">' +
+                    '<a href="{% url "order_detail" 0 %}'.replace(/0\/$/, order.id + '/') + '" class="btn btn-primary">Подробнее</a>' +
+                '</div>';
+            listEl.appendChild(card);
+        });
+        listEl.style.display = 'flex';
+    } catch (e) {
+        console.error('Ошибка загрузки заказов', e);
+        loadingEl.innerHTML = '<h2>Ошибка загрузки заказов</h2><p>Попробуйте обновить страницу позже.</p>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadOrders);
+</script>
+{% endblock %}
+

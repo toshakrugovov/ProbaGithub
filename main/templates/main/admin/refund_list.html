@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Возвраты курсов - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header" style="margin-bottom: 24px;">
+        <h1>Заявления на возврат курсов</h1>
+        <a href="{% url 'admin_dashboard' %}">← Назад в панель</a>
+    </div>
+    <p style="color: var(--text-color); margin-bottom: 24px;">Одобрение возврата: средства списываются с баланса организации и зачисляются на баланс пользователя. Доступ к курсу снимается. История заявлений сохраняется; каждое заявление можно скачать в PDF.</p>
+
+    <h2 style="font-size: 18px; margin-bottom: 12px; color: var(--text-color);">На рассмотрении</h2>
+    {% if refunds %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>№ заявления</th>
+                <th>Пользователь</th>
+                <th>Курс</th>
+                <th>Сумма</th>
+                <th>Дата заявления</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in refunds %}
+            <tr>
+                <td><strong>{{ r.refund_number }}</strong></td>
+                <td>{{ r.user.username }} ({{ r.user.email|default:"—" }})</td>
+                <td>{{ r.course_purchase.course.title }}</td>
+                <td>{{ r.amount }} ₽</td>
+                <td>{{ r.created_at|date:"d.m.Y H:i" }}</td>
+                <td class="table-actions">
+                    <form method="post" action="{% url 'admin_refund_approve' r.id %}" style="display: inline;" onsubmit="return confirm('Вернуть {{ r.amount }} ₽ на баланс пользователя {{ r.user.username }}? Доступ к курсу будет снят.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn">Вернуть средства</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="padding: 20px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-color);">Нет заявлений на рассмотрении.</p>
+    {% endif %}
+
+    <h2 style="font-size: 18px; margin: 28px 0 12px; color: var(--text-color);">История заявлений</h2>
+    {% if all_refunds %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>№ заявления</th>
+                <th>Пользователь</th>
+                <th>Курс</th>
+                <th>Сумма</th>
+                <th>Дата заявления</th>
+                <th>Статус</th>
+                <th>PDF</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in all_refunds %}
+            <tr>
+                <td><strong>{{ r.refund_number }}</strong></td>
+                <td>{{ r.user.username }} ({{ r.user.email|default:"—" }})</td>
+                <td>{{ r.course_purchase.course.title }}</td>
+                <td>{{ r.amount }} ₽</td>
+                <td>{{ r.created_at|date:"d.m.Y H:i" }}</td>
+                <td>{% if r.status == 'pending' %}На рассмотрении{% elif r.status == 'approved' %}Одобрен{% elif r.status == 'rejected' %}Отклонён{% else %}{{ r.status }}{% endif %}</td>
+                <td>
+                    <a href="{% url 'admin_refund_pdf' r.id %}" class="btn" style="padding: 6px 12px; font-size: 13px;" target="_blank">Скачать PDF</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="padding: 20px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-color);">История заявлений пуста.</p>
+    {% endif %}
+</div>
+{% endblock %}

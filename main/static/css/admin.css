@@ -1,0 +1,1259 @@
+/* =================== ОБЩИЕ СТИЛИ ДЛЯ АДМИН/МЕНЕДЖЕР ПАНЕЛЕЙ =================== */
+
+/* Сообщения об ошибках форм — в цветах сайта */
+#form-error, .form-error { color: var(--text-color, #1a1a1a) !important; }
+
+/* Общие стили для всех панелей управления */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 80px auto 40px;
+    padding: 0 20px;
+}
+
+/* Блок с подсказками о горячих клавишах */
+.shortcuts-info-card {
+    transition: box-shadow 0.2s ease;
+}
+
+.shortcuts-info-card:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+.shortcut-hint-item {
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.shortcut-hint-item:hover {
+    transform: translateY(-2px);
+    background: var(--elev, rgba(0,0,0,0.05)) !important;
+}
+
+.dark-theme .shortcut-hint-item:hover {
+    background: var(--elev, rgba(255,255,255,0.05)) !important;
+}
+
+.shortcuts-info-card kbd {
+    transition: all 0.2s ease;
+}
+
+.shortcuts-info-card kbd:hover {
+    background: var(--text-color, #000) !important;
+    color: var(--bg-color, #fff) !important;
+    border-color: var(--text-color, #000) !important;
+}
+
+.dark-theme .shortcuts-info-card kbd:hover {
+    background: var(--text-color, #fff) !important;
+    color: var(--bg-color, #000) !important;
+    border-color: var(--text-color, #fff) !important;
+}
+
+@media (max-width: 768px) {
+    .shortcuts-info-card > div:last-child {
+        grid-template-columns: 1fr;
+    }
+    
+    .shortcuts-info-card h3 {
+        font-size: 16px !important;
+    }
+    
+    .shortcuts-info-card > div:first-child {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.dashboard-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.dashboard-actions a {
+    padding: 8px 12px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-color);
+    background: var(--bg-color);
+    transition: all 0.2s ease;
+}
+
+.dark-theme .dashboard-actions a {
+    border-color: #fff;
+}
+
+.dashboard-actions a:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .dashboard-actions a:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* Статистика */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-color);
+}
+
+.stat-card p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-color-secondary);
+}
+
+/* Сетка карточек */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.dashboard-card {
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+.dashboard-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dashboard-card p {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    color: var(--text-color-secondary);
+    line-height: 1.5;
+}
+
+.dashboard-card a {
+    display: inline-block;
+    padding: 8px 16px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-color);
+    background: var(--bg-color);
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.dark-theme .dashboard-card a {
+    border-color: #fff;
+}
+
+.dashboard-card a:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .dashboard-card a:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* Секции с данными */
+.data-section {
+    margin-top: 32px;
+    padding: 20px;
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 10px;
+}
+
+.data-section h3 {
+    margin: 0 0 16px 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.data-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.data-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-list li:last-child {
+    border-bottom: none;
+}
+
+/* =================== СТИЛИ ДЛЯ ФОРМ =================== */
+
+.form-wrap {
+    max-width: 900px;
+    margin: 80px auto 40px;
+    padding: 0 20px;
+}
+
+.form-container {
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: inherit;
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #000;
+}
+
+.form-actions button,
+.form-actions a {
+    padding: 12px 24px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.form-actions button[type="submit"] {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .form-actions button[type="submit"] {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+.form-actions button[type="submit"]:hover {
+    background: #333;
+}
+
+.dark-theme .form-actions button[type="submit"]:hover {
+    background: #fff;
+    color: #000;
+}
+
+.form-actions a {
+    background: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid #000;
+}
+
+.dark-theme .form-actions a {
+    background: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid #fff;
+}
+
+.form-actions a:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .form-actions a:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* =================== СТИЛИ ДЛЯ ТАБЛИЦ =================== */
+
+.table-wrap {
+    max-width: 1400px;
+    margin: 80px auto 40px;
+    padding: 0 20px;
+}
+
+.table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.table-header h1 {
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.table-filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.table-filters input,
+.table-filters select {
+    padding: 8px 12px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+.table-filters button {
+    padding: 8px 16px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    background: #000;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.dark-theme .table-filters button {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+.table-filters button:hover {
+    background: #333;
+}
+
+.dark-theme .table-filters button:hover {
+    background: #fff;
+    color: #000;
+}
+
+.table-actions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.table-actions-header a {
+    padding: 8px 16px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-color);
+    background: var(--bg-color);
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.dark-theme .table-actions-header a {
+    border-color: #fff;
+}
+
+.table-actions-header a:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .table-actions-header a:hover {
+    background: #fff;
+    color: #000;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.data-table th,
+.data-table td {
+    border: 1px solid #000;
+    padding: 12px;
+    font-size: 14px;
+    text-align: left;
+}
+
+.data-table th {
+    background: var(--bg-color);
+    font-weight: 700;
+    border-bottom: 2px solid #000;
+}
+
+.data-table tr:nth-child(even) td {
+    background: rgba(0,0,0,0.02);
+}
+
+.data-table tr:hover td {
+    background: rgba(0,0,0,0.04);
+}
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.table-actions a,
+.table-actions form button {
+    padding: 6px 12px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-color);
+    background: var(--bg-color);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dark-theme .table-actions a,
+.dark-theme .table-actions form button {
+    border-color: #fff;
+}
+
+.table-actions a:hover,
+.table-actions form button:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .table-actions a:hover,
+.dark-theme .table-actions form button:hover {
+    background: #fff;
+    color: #000;
+}
+
+.table-actions .danger {
+    border-color: var(--text-color, #000);
+    color: var(--text-color, #000);
+}
+
+.table-actions .danger:hover {
+    background: var(--text-color, #000);
+    color: var(--bg-color, #fff);
+}
+
+/* Пагинация */
+.pager,
+.data-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.pager a,
+.pager span,
+.data-pager a,
+.data-pager span {
+    padding: 8px 12px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+}
+
+.dark-theme .pager a,
+.dark-theme .pager span,
+.dark-theme .data-pager a,
+.dark-theme .data-pager span {
+    border-color: #fff;
+}
+
+.pager a:hover,
+.data-pager a:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .pager a:hover,
+.dark-theme .data-pager a:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* =================== БЕЙДЖИ СТАТУСОВ =================== */
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-available,
+.status-unavailable,
+.status-processing,
+.status-paid,
+.status-shipped,
+.status-delivered,
+.status-cancelled,
+.status-active,
+.status-blocked,
+.status-new,
+.status-in_progress,
+.status-resolved {
+    background: var(--surface, #f5f5f5);
+    color: var(--text-color, #1a1a1a);
+    border: 1px solid var(--border-color, #eaeaea);
+}
+
+/* Бейджи действий */
+.action-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.action-create,
+.action-update,
+.action-delete,
+.action-view,
+.action-export {
+    background: var(--surface, #f5f5f5);
+    color: var(--text-color, #1a1a1a);
+    border: 1px solid var(--border-color, #eaeaea);
+}
+
+.assigned-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    background: var(--surface, #f5f5f5);
+    color: var(--text-color, #1a1a1a);
+    border: 1px solid var(--border-color, #eaeaea);
+}
+
+/* =================== СТИЛИ ДЛЯ ДЕТАЛЬНЫХ СТРАНИЦ =================== */
+
+.detail-wrap {
+    max-width: 1000px;
+    margin: 80px auto 40px;
+    padding: 0 20px;
+}
+
+.info-box {
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.info-box h2 {
+    margin: 0 0 20px 0;
+    font-size: 24px;
+}
+
+.info-row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.info-row strong {
+    font-weight: 600;
+}
+
+.message-box {
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.message-box h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+}
+
+.message-text {
+    padding: 16px;
+    background: rgba(0,0,0,0.02);
+    border-radius: 6px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+
+.items-table th,
+.items-table td {
+    border: 1px solid #000;
+    padding: 12px;
+    text-align: left;
+}
+
+.items-table th {
+    background: var(--bg-color);
+    font-weight: 700;
+}
+
+/* =================== СТИЛИ ДЛЯ ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ =================== */
+
+.confirm-wrap {
+    max-width: 600px;
+    margin: 80px auto 40px;
+    padding: 0 20px;
+}
+
+.confirm-box {
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+}
+
+.confirm-box h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+    color: var(--text-color, #1a1a1a);
+}
+
+.confirm-box p {
+    margin-bottom: 24px;
+    color: var(--text-color-secondary);
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirm-actions button,
+.confirm-actions a {
+    padding: 12px 24px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.confirm-actions button[type="submit"] {
+    background: var(--text-color, #000);
+    color: var(--bg-color, #fff);
+    border-color: var(--text-color, #000);
+}
+
+.confirm-actions button[type="submit"]:hover {
+    opacity: 0.9;
+}
+
+.confirm-actions a {
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+.dark-theme .confirm-actions a {
+    border-color: #fff;
+}
+
+.confirm-actions a:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .confirm-actions a:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* =================== СПЕЦИАЛЬНЫЕ СТИЛИ =================== */
+
+/* Размеры товаров */
+.sizes-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #000;
+}
+
+.size-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: end;
+}
+
+.size-item input {
+    padding: 8px 12px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.remove-size {
+    padding: 8px 12px;
+    border: 1px solid var(--text-color, #000);
+    border-radius: 6px;
+    background: var(--bg-color);
+    color: var(--text-color, #000);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.remove-size:hover {
+    background: var(--text-color, #000);
+    color: var(--bg-color, #fff);
+}
+
+.add-size {
+    padding: 8px 16px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 8px;
+    transition: all 0.2s ease;
+}
+
+.dark-theme .add-size {
+    border-color: #fff;
+}
+
+.add-size:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .add-size:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* Теги */
+.tags-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #000;
+}
+
+.tags-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.tags-checkboxes label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    margin: 0;
+}
+
+/* Категории и бренды */
+.sections-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+}
+
+.section-box {
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 24px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.section-header a {
+    padding: 6px 12px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.dark-theme .section-header a {
+    border-color: #fff;
+}
+
+.section-header a:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .section-header a:hover {
+    background: #fff;
+    color: #000;
+}
+
+.section-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.section-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-item:last-child {
+    border-bottom: none;
+}
+
+.section-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.section-item-actions a {
+    padding: 4px 8px;
+    border: 1px solid #000;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.dark-theme .section-item-actions a {
+    border-color: #fff;
+}
+
+.section-item-actions a:hover {
+    background: #000;
+    color: #fff;
+}
+
+.dark-theme .section-item-actions a:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* Аналитика */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.analytics-section {
+    background: var(--bg-color);
+    border: 1px solid #000;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.analytics-section h2 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.analytics-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.analytics-item:last-child {
+    border-bottom: none;
+}
+
+.analytics-item strong {
+    font-weight: 600;
+}
+
+.category-header {
+    font-weight: 700;
+    padding: 12px;
+    border-bottom: 2px solid #000;
+    background: rgba(0,0,0,0.02);
+}
+
+.category-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.category-item:last-child {
+    border-bottom: none;
+}
+
+/* Логи активности */
+.log-item {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+}
+
+.log-item:last-child {
+    border-bottom: none;
+}
+
+.log-item strong {
+    font-weight: 600;
+}
+
+.description-box {
+    background: rgba(0,0,0,0.02);
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 16px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .dashboard-container,
+    .table-wrap,
+    .form-wrap,
+    .detail-wrap,
+    .confirm-wrap {
+        padding: 0 15px;
+        margin-top: 60px;
+    }
+    
+    .dashboard-header,
+    .table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .dashboard-header h1,
+    .table-header h1 {
+        font-size: 22px;
+    }
+    
+    .dashboard-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .dashboard-actions a {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .sections-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid,
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .stat-card h3 {
+        font-size: 24px;
+    }
+    
+    .table-filters {
+        width: 100%;
+    }
+    
+    .table-filters form {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .table-filters input,
+    .table-filters select,
+    .table-filters button {
+        width: 100%;
+    }
+    
+    .table-actions-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .table-actions-header a {
+        width: 100%;
+        text-align: center;
+    }
+    
+    /* Таблицы на мобильных - делаем прокручиваемыми */
+    .table-wrap {
+        overflow-x: auto;
+    }
+    
+    .data-table {
+        min-width: 800px;
+        font-size: 12px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px;
+    }
+    
+    .table-actions {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .table-actions a,
+    .table-actions form button {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+    
+    .form-container {
+        padding: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions button,
+    .form-actions a {
+        width: 100%;
+    }
+    
+    .info-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+    
+    .info-row strong {
+        margin-bottom: 4px;
+    }
+    
+    .items-table {
+        font-size: 12px;
+        overflow-x: auto;
+        display: block;
+    }
+    
+    .items-table th,
+    .items-table td {
+        padding: 8px;
+    }
+    
+    .confirm-actions {
+        flex-direction: column;
+    }
+    
+    .confirm-actions button,
+    .confirm-actions a {
+        width: 100%;
+    }
+    
+    .size-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .tags-checkboxes {
+        grid-template-columns: 1fr;
+    }
+    
+    .category-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .section-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .section-item-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-container,
+    .table-wrap,
+    .form-wrap,
+    .detail-wrap,
+    .confirm-wrap {
+        padding: 0 10px;
+        margin-top: 50px;
+    }
+    
+    .dashboard-header h1,
+    .table-header h1 {
+        font-size: 20px;
+    }
+    
+    .stat-card {
+        padding: 16px;
+    }
+    
+    .stat-card h3 {
+        font-size: 20px;
+    }
+    
+    .dashboard-card {
+        padding: 16px;
+    }
+    
+    .dashboard-card h3 {
+        font-size: 18px;
+    }
+    
+    .data-table {
+        min-width: 600px;
+        font-size: 11px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 6px;
+    }
+    
+    .form-container {
+        padding: 16px;
+    }
+    
+    .info-box,
+    .message-box {
+        padding: 16px;
+    }
+    
+    .info-box h2 {
+        font-size: 20px;
+    }
+    
+    .message-box h3 {
+        font-size: 16px;
+    }
+}
+

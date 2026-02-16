@@ -1,0 +1,127 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Обращение #{{ ticket.id }} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="detail-wrap">
+    <div style="margin-bottom: 16px;">
+        <a href="{% url 'admin_support_list' %}" class="table-actions-header a">← Назад</a>
+    </div>
+
+    <div class="info-box">
+        <h2>Обращение #{{ ticket.id }}</h2>
+        <div class="info-row">
+            <strong>Пользователь:</strong>
+            <span>{{ ticket.user.username|default:"Гость" }} ({{ ticket.user.email|default:"-" }})</span>
+        </div>
+        <div class="info-row">
+            <strong>Тема:</strong>
+            <span>{{ ticket.subject }}</span>
+        </div>
+        <div class="info-row">
+            <strong>Статус:</strong>
+            <span>{{ ticket.get_ticket_status_display }}</span>
+        </div>
+        <div class="info-row">
+            <strong>Ответственный:</strong>
+            <span>{{ ticket.assigned_to.username|default:"Не назначен" }}</span>
+        </div>
+        <div class="info-row">
+            <strong>Дата:</strong>
+            <span>{{ ticket.created_at|date:"d.m.Y H:i" }}</span>
+        </div>
+    </div>
+
+    <div class="message-box">
+        <h3>Сообщение пользователя</h3>
+        <div class="message-text">{{ ticket.message_text }}</div>
+    </div>
+
+    {% if ticket.response_text %}
+    <div class="message-box">
+        <h3>Ответ</h3>
+        <div class="message-text">{{ ticket.response_text }}</div>
+    </div>
+    {% endif %}
+
+    <form id="support-response-form" class="form-container">
+        {% csrf_token %}
+        <div id="form-error" class="form-error" style="display: none; margin-bottom: 16px;"></div>
+        <h3 style="margin: 0 0 20px 0;">Управление обращением</h3>
+        <div class="form-group">
+            <label for="assigned_to">Назначить ответственного</label>
+            <select id="assigned_to" name="assigned_to">
+                <option value="">Не назначен</option>
+                {% for manager in managers %}
+                <option value="{{ manager.id }}" {% if ticket.assigned_to_id == manager.id %}selected{% endif %}>{{ manager.username }} ({{ manager.email }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="ticket_status">Статус</label>
+            <select id="ticket_status" name="ticket_status" required>
+                <option value="new" {% if ticket.ticket_status == 'new' %}selected{% endif %}>Новое</option>
+                <option value="in_progress" {% if ticket.ticket_status == 'in_progress' %}selected{% endif %}>В работе</option>
+                <option value="resolved" {% if ticket.ticket_status == 'resolved' %}selected{% endif %}>Решено</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="response_text">Ответ</label>
+            <textarea id="response_text" name="response_text" placeholder="Введите ответ пользователю...">{{ ticket.response_text|default:'' }}</textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" id="submit-btn">Сохранить</button>
+            <a href="{% url 'admin_support_list' %}">Отмена</a>
+        </div>
+    </form>
+
+<script>
+document.getElementById('support-response-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const errorDiv = document.getElementById('form-error');
+    const submitBtn = document.getElementById('submit-btn');
+    errorDiv.style.display = 'none';
+    
+    const data = {
+        ticket_status: document.getElementById('ticket_status').value,
+        response_text: document.getElementById('response_text').value.trim()
+    };
+    
+    const assignedTo = document.getElementById('assigned_to').value;
+    if (assignedTo) {
+        data.assigned_to_id = parseInt(assignedTo);
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Сохранение...';
+    
+    try {
+        const result = await SupportAPI.update({{ ticket.id }}, data);
+        
+        if (result.success) {
+            alert('Ответ сохранен');
+            location.reload();
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при сохранении ответа';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Сохранить';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Сохранить';
+    }
+});
+</script>
+</div>
+{% endblock %}
+

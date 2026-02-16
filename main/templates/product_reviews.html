@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Отзывы - {{ product.product_name }} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+<link rel="stylesheet" href="{% static 'css/product_reviews.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="reviews-page">
+    <div class="reviews-container">
+        <!-- Карточка товара слева -->
+        <div class="product-card-sidebar">
+            <a href="{% url 'catalog' %}" class="btn-back-catalog">← Вернуться в каталог</a>
+            <div class="product-card-mini">
+                {% if product.main_image_url %}
+                    <img src="{{ product.main_image_url }}" alt="{{ product.product_name }}" class="product-image-mini">
+                {% else %}
+                    <div class="product-image-mini no-image">Нет изображения</div>
+                {% endif %}
+                <div class="product-info-mini">
+                    <h2 class="product-name-mini">{{ product.product_name }}</h2>
+                    <div class="product-price-mini">
+                        {% if product.discount > 0 %}
+                            <span class="product-old-price">{{ product.price }} ₽</span>
+                            {{ product.final_price|floatformat:0 }} ₽
+                            <span class="product-discount">-{{ product.discount }}%</span>
+                        {% else %}
+                            {{ product.price }} ₽
+                        {% endif %}
+                    </div>
+                    {% if product.brand %}
+                        <p class="product-brand-mini">Бренд: {{ product.brand.brand_name }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Список отзывов справа -->
+        <div class="reviews-content">
+            <div class="reviews-header">
+                <h1>Отзывы о товаре</h1>
+                <div class="rating-summary">
+                    <div class="rating-display-large">
+                        <span class="avg-rating-large">{{ avg_rating }}</span>
+                        <div class="stars-large">
+                            {% for i in "12345" %}
+                                <span class="star {% if forloop.counter <= avg_rating|floatformat:0 %}star-filled{% else %}star-empty{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                        <span class="reviews-count-large">({{ total_reviews }} {{ total_reviews|pluralize:"отзыв,отзыва,отзывов" }})</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Форма добавления отзыва -->
+            {% if user.is_authenticated %}
+                {% if user_has_purchased %}
+                    <div class="review-form-container">
+                        <h3>{% if user_review %}Изменить ваш отзыв{% else %}Оставить отзыв{% endif %}</h3>
+                        <form id="reviewForm" onsubmit="submitReview(event)">
+                            <div class="rating-input">
+                                <label>Оценка:</label>
+                                <div class="stars-input">
+                                    <span class="star" data-rating="1" onclick="setRating(1)">★</span>
+                                    <span class="star" data-rating="2" onclick="setRating(2)">★</span>
+                                    <span class="star" data-rating="3" onclick="setRating(3)">★</span>
+                                    <span class="star" data-rating="4" onclick="setRating(4)">★</span>
+                                    <span class="star" data-rating="5" onclick="setRating(5)">★</span>
+                                </div>
+                                <input type="hidden" id="reviewRating" value="{% if user_review %}{{ user_review.rating_value }}{% else %}0{% endif %}">
+                            </div>
+                            <div class="review-text-input">
+                                <label for="reviewText">Комментарий:</label>
+                                <textarea id="reviewText" rows="4" placeholder="Оставьте ваш отзыв...">{% if user_review %}{{ user_review.review_text }}{% endif %}</textarea>
+                            </div>
+                            <button type="submit" class="btn-submit-review">{% if user_review %}Обновить отзыв{% else %}Отправить отзыв{% endif %}</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="review-purchase-warning">
+                        <p>Вы можете оставить отзыв только на купленный товар. Пожалуйста, сначала купите этот товар.</p>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="review-login-prompt">
+                    <p>Войдите, чтобы оставить отзыв</p>
+                </div>
+            {% endif %}
+
+            <!-- Список отзывов -->
+            <div class="reviews-list-full">
+                <h3>Все отзывы</h3>
+                {% if reviews %}
+                    {% for review in reviews %}
+                    <div class="review-item-full">
+                        <div class="review-header-full">
+                            <span class="review-author-full">{{ review.user.get_full_name|default:review.user.username|default:"Анонимный пользователь" }}</span>
+                            <div class="review-rating-full">
+                                {% for i in "12345" %}
+                                    <span class="{% if forloop.counter <= review.rating_value %}star-filled{% else %}star-empty{% endif %}">★</span>
+                                {% endfor %}
+                            </div>
+                            <span class="review-date-full">{{ review.created_at|date:"d.m.Y H:i" }}</span>
+                        </div>
+                        {% if review.review_text %}
+                            <div class="review-text-full">{{ review.review_text|linebreaks }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-reviews-full">Пока нет отзывов. Будьте первым!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const productId = {{ product.id }};
+const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+
+// Инициализация звезд для существующего отзыва
+{% if user_review %}
+document.addEventListener('DOMContentLoaded', function() {
+    const rating = {{ user_review.rating_value }};
+    setRating(rating);
+});
+{% endif %}
+
+function setRating(rating) {
+    document.getElementById("reviewRating").value = rating;
+    document.querySelectorAll(".stars-input .star").forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add("active");
+        } else {
+            star.classList.remove("active");
+        }
+    });
+}
+
+function submitReview(event) {
+    event.preventDefault();
+    if (!isAuthenticated) {
+        alert("Пожалуйста, авторизуйтесь!");
+        return;
+    }
+    
+    const rating = parseInt(document.getElementById("reviewRating").value);
+    const text = document.getElementById("reviewText").value.trim();
+    
+    if (rating === 0) {
+        alert("Пожалуйста, выберите оценку!");
+        return;
+    }
+    
+    function getCookie(name) {
+        let v = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(function(c) {
+                c = c.trim();
+                if (c.startsWith(name + '=')) v = decodeURIComponent(c.slice(name.length + 1));
+            });
+        }
+        return v || (document.querySelector('[name=csrfmiddlewaretoken]') && document.querySelector('[name=csrfmiddlewaretoken]').value) || '';
+    }
+    fetch(`/api/courses/${productId}/reviews/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie('csrftoken')
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            rating: rating,
+            review_text: text
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert("Отзыв {% if user_review %}обновлен{% else %}добавлен{% endif %}!");
+            location.reload();
+        } else {
+            alert("Ошибка: " + (data.message || "Не удалось добавить отзыв"));
+        }
+    })
+    .catch(() => alert("Ошибка при отправке отзыва"));
+}
+</script>
+{% endblock %}
+

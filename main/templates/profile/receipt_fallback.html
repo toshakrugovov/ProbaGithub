@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Чек #{{ receipt.id }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #000; }
+    .container { max-width: 700px; margin: 0 auto; padding: 24px; }
+    .block { margin-bottom: 12px; }
+    .title { font-weight: bold; }
+    .line { border-top: 1px dashed #000; margin: 10px 0; }
+  </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="block title">{{ config.company_name }}</div>
+      <div class="block">ИНН {{ config.company_inn }}</div>
+      <div class="block">Адрес: {{ config.company_address }}</div>
+      <div class="block">Кассир: {{ config.cashier_name }}</div>
+      <div class="block">Смена № {{ config.shift_number }}</div>
+      <div class="block">Чек № {{ receipt.number|default:receipt.id }}</div>
+      <div class="block">Дата: {{ receipt.created_at|date:"d.m.Y" }}</div>
+      <div class="block">Время: {{ receipt.created_at|date:"H:i" }}</div>
+
+      <div class="line"></div>
+      <div class="block title">Товары:</div>
+      {% for item in receipt.items.all %}
+      <div class="block">
+        {{ item.product_name }}, {{ item.quantity }} шт. x {{ item.unit_price }} руб. = {{ item.line_total }} руб.<br/>
+        НДС {{ receipt.vat_rate }}% = {{ item.vat_amount }} руб.
+      </div>
+      {% endfor %}
+      <div class="line"></div>
+      <div class="block"><strong>Итого:</strong> {{ receipt.total_amount }} руб.</div>
+      <div class="block">В том числе НДС {{ receipt.vat_rate }}%: {{ receipt.vat_amount }} руб.</div>
+      <div class="block title">Оплата:</div>
+      <div class="block">
+        {% if receipt.payment_method == 'cash' %} Наличные
+        {% elif receipt.payment_method == 'balance' %} С баланса
+        {% else %} Банковская карта
+        {% endif %}: {{ receipt.total_amount }} руб.
+      </div>
+
+      <div class="line"></div>
+      <div class="block">Спасибо за покупку!</div>
+      <div class="block">Сайт ФНС: {{ config.site_fns }}</div>
+      <div class="block">РН ККТ {{ config.kkt_rn }}</div>
+      <div class="block">ЗН ККТ {{ config.kkt_sn }}</div>
+      <div class="block">ФН {{ config.fn_number }}</div>
+    </div>
+  </body>
+</html>
+
+

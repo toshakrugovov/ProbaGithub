@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if course %}Редактирование курса{% else %}Добавление курса{% endif %} — Панель администратора{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <h1>{% if course %}Редактирование курса{% else %}Добавление курса{% endif %}</h1>
+    <div style="margin-bottom: 16px;">
+        <a href="{% url 'admin_courses_list' %}">← Назад к списку курсов (панель администратора)</a>
+    </div>
+    {% if not course %}
+    <p style="margin-bottom: 16px; padding: 12px; background: var(--surface, #f5f5f5); border-radius: 8px; font-size: 14px;">
+        Заполните основные данные и нажмите «Сохранить». После сохранения откроется страница редактирования, где можно добавить уроки курса (страницы с картинками, видео или PDF и текстом).
+    </p>
+    {% endif %}
+    <form method="post" action="{% if course %}{% url 'admin_course_edit' course_id=course.id %}{% else %}{% url 'admin_course_add' %}{% endif %}" class="form-container" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="title">Название *</label>
+            <input type="text" id="title" name="title" value="{% if course %}{{ course.title }}{% elif form_data.title %}{{ form_data.title }}{% endif %}" required>
+        </div>
+        <div class="form-group">
+            <label for="slug">Slug (URL)</label>
+            <input type="text" id="slug" name="slug" value="{% if course %}{{ course.slug }}{% elif form_data.slug %}{{ form_data.slug }}{% endif %}" placeholder="автоматически из названия">
+        </div>
+        <div class="form-group">
+            <label for="category_id">Категория</label>
+            <select id="category_id" name="category_id">
+                <option value="">—</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if course and course.category_id == cat.id %}selected{% elif form_data.category_id and form_data.category_id|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.category_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="description">Описание</label>
+            <textarea id="description" name="description" rows="4">{% if course %}{{ course.description }}{% elif form_data.description %}{{ form_data.description }}{% endif %}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="included_content">Что входит в состав</label>
+            <textarea id="included_content" name="included_content" rows="3">{% if course %}{{ course.included_content }}{% elif form_data.included_content %}{{ form_data.included_content }}{% endif %}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="price">Цена (₽) *</label>
+            <input type="number" id="price" name="price" value="{% if course %}{{ course.price }}{% elif form_data.price %}{{ form_data.price }}{% else %}0{% endif %}" min="0" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label for="discount">Скидка (%)</label>
+            <input type="number" id="discount" name="discount" value="{% if course %}{{ course.discount }}{% elif form_data.discount %}{{ form_data.discount }}{% else %}0{% endif %}" min="0" max="100" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="main_photo">Главное фото курса — загрузить файл</label>
+            <input type="file" id="main_photo" name="main_photo" accept=".jpg,.jpeg,.png,.webp,.gif">
+            <p style="margin-top:6px;font-size:13px;color:var(--text-color-secondary);">JPG, PNG, WebP или GIF. Файлы сохраняются на сервер, в БД хранится только путь.</p>
+            {% if course and course.cover_image_path %}<p style="margin-top:8px;font-size:13px;color:var(--text-color-secondary);">Сейчас: <img src="{{ course.cover_image_path }}" alt="" style="max-height:60px;vertical-align:middle;"> {{ course.cover_image_path }}</p>{% endif %}
+            <label for="cover_image_path" style="margin-top:12px;display:block;">Или вставить URL обложки</label>
+            <input type="text" id="cover_image_path" name="cover_image_path" value="{% if course %}{{ course.cover_image_path }}{% elif form_data.cover_image_path %}{{ form_data.cover_image_path }}{% endif %}" placeholder="/media/... или https://...">
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_available" {% if not course or course.is_available %}checked{% endif %}{% if form_data.is_available and not course %} checked{% endif %}>
+                Доступен для покупки
+            </label>
+        </div>
+
+        {% if course %}
+        <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-color);">
+            <h2 style="font-size: 18px; margin-bottom: 12px;">Уроки курса</h2>
+            <p style="font-size: 14px; color: var(--text-color-secondary); margin-bottom: 16px;">У каждого урока — до 10 страниц (картинка, видео или PDF + текст). Ученик открывает урок, листает страницы, нажимает «Я усвоил» и ставит 👍/👎.</p>
+            <div style="margin-bottom: 20px;">
+                {% for les in course.lessons.all %}
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-color);">
+                    <span style="font-weight:600;">Урок {{ forloop.counter }}</span>
+                    <span style="color:var(--text-color-secondary);">{{ les.title|default:"—" }}</span>
+                    <span style="color:var(--text-color-secondary);font-size:13px;">{{ les.pages.count }} стр.</span>
+                    <a href="{% url 'admin_lesson_edit' course_id=course.id lesson_id=les.id %}" class="btn" style="margin-left:auto;">Редактировать</a>
+                </div>
+                {% empty %}
+                <p style="color:var(--text-color-secondary);">Уроков пока нет.</p>
+                {% endfor %}
+            </div>
+            <a href="{% url 'admin_lesson_add' course_id=course.id %}" class="btn btn-primary">{% if course.lessons.exists %}Добавить урок{% else %}Добавить первый урок{% endif %}</a>
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit">Сохранить</button>
+            <a href="{% url 'admin_courses_list' %}">Отмена</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

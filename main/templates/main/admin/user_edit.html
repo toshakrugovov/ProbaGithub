@@ -1,0 +1,171 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_create %}Создание пользователя{% else %}Редактирование пользователя{% endif %} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <h1>{% if is_create %}Создание пользователя{% else %}Редактирование пользователя{% endif %}</h1>
+    <form id="user-form" class="form-container">
+        {% csrf_token %}
+        <div id="form-error" class="form-error" style="display: none; margin-bottom: 16px;"></div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="username">Логин *</label>
+                <input type="text" id="username" name="username" value="{{ user_obj.username|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" value="{{ user_obj.email|default:'' }}" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="first_name">Имя</label>
+                <input type="text" id="first_name" name="first_name" value="{{ user_obj.first_name|default:'' }}">
+            </div>
+            <div class="form-group">
+                <label for="last_name">Фамилия</label>
+                <input type="text" id="last_name" name="last_name" value="{{ user_obj.last_name|default:'' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Пароль {% if not is_create %}(оставьте пустым, чтобы не менять){% endif %} *</label>
+            <input type="password" id="password" name="password" {% if is_create %}required{% endif %}>
+        </div>
+
+        <div class="form-group">
+            <label for="secret_word">Секретное слово {% if not is_create %}(оставьте пустым, чтобы не менять){% endif %}</label>
+            <input type="password" id="secret_word" name="secret_word" placeholder="Введите секретное слово">
+            <small style="color: var(--text-color-secondary); font-size: 12px; display: block; margin-top: 4px;">Используется для восстановления пароля и подтверждения важных действий</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="role_id">Роль</label>
+                <select id="role_id" name="role_id">
+                    <option value="">Нет роли</option>
+                    {% for role in roles %}
+                    <option value="{{ role.id }}" {% if profile.role_id == role.id %}selected{% endif %}>{{ role.role_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="user_status">Статус</label>
+                <select id="user_status" name="user_status">
+                    <option value="active" {% if profile.user_status == 'active' or is_create %}selected{% endif %}>Активный</option>
+                    <option value="blocked" {% if profile.user_status == 'blocked' %}selected{% endif %}>Заблокирован</option>
+                </select>
+            </div>
+        </div>
+
+        {% if not is_create %}
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="blocked" {% if profile.user_status == 'blocked' %}checked{% endif %}>
+                Заблокировать пользователя
+            </label>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_active" {% if user_obj.is_active %}checked{% endif %}>
+                    Активен
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_staff" {% if user_obj.is_staff %}checked{% endif %}>
+                    Персонал
+                </label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_superuser" {% if user_obj.is_superuser %}checked{% endif %}>
+                Суперпользователь
+            </label>
+        </div>
+        <div class="form-group">
+            <label for="balance">Баланс</label>
+            <input type="number" id="balance" name="balance" step="0.01" value="{{ profile.balance|default:'0' }}">
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit" id="submit-btn">Сохранить</button>
+            <a href="{% url 'admin_users_list' %}">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('user-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const errorDiv = document.getElementById('form-error');
+    const submitBtn = document.getElementById('submit-btn');
+    errorDiv.style.display = 'none';
+    
+    const data = {
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        first_name: document.getElementById('first_name').value.trim(),
+        last_name: document.getElementById('last_name').value.trim(),
+        role_id: document.getElementById('role_id').value || null,
+        user_status: document.getElementById('user_status').value
+    };
+    
+    const password = document.getElementById('password').value.trim();
+    if (password) {
+        data.password = password;
+    }
+    
+    const secretWord = document.getElementById('secret_word').value.trim();
+    if (secretWord) {
+        data.secret_word = secretWord;
+    }
+    
+    {% if not is_create %}
+    if ('is_active' in document.querySelector('input[name="is_active"]')) {
+        data.is_active = document.querySelector('input[name="is_active"]').checked;
+    }
+    {% endif %}
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Сохранение...';
+    
+    try {
+        {% if is_create %}
+        const result = await ManagementAPI.users.create(data);
+        {% else %}
+        const result = await ManagementAPI.users.update({{ user_obj.id }}, data);
+        {% endif %}
+        
+        if (result.success) {
+            alert(result.message || 'Пользователь успешно сохранен');
+            window.location.href = '{% url "admin_users_list" %}';
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при сохранении пользователя';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Сохранить';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Сохранить';
+    }
+});
+</script>
+{% endblock %}
+

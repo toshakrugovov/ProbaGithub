@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-content">
+    <div class="profile-container">
+        <h2>{% if profile.full_name %}{{ profile.full_name }}{% else %}{{ request.user.username }}{% endif %}</h2>
+
+        <div class="profile-info">
+            <p><strong>ФИО:</strong> {% if profile.full_name %}{{ profile.full_name }}{% else %}<span style="color: var(--text-color-secondary);">Не указано</span> <a href="{% url 'edit_profile' %}" style="font-size: 13px;">Указать</a>{% endif %}</p>
+            {% if user.email %}
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            {% endif %}
+            {% if profile.phone_number %}
+            <p><strong>Телефон:</strong> {{ profile.phone_number }}</p>
+            {% endif %}
+            {% if profile.birth_date %}
+            <p><strong>Дата рождения:</strong> {{ profile.birth_date|date:"d.m.Y" }}</p>
+            {% endif %}
+        </div>
+
+        <div class="buttons">
+            <a href="{% url 'edit_profile' %}" class="btn">Редактировать профиль</a>
+            <a href="{% url 'my_courses' %}" class="btn">Мои курсы</a>
+            <a href="{% url 'order_history' %}" class="btn">Мои заказы</a>
+            <a href="{% url 'receipts_list' %}" class="btn">Мои чеки</a>
+            <a href="{% url 'refund_requests_list' %}" class="btn">Мои заявления на возврат</a>
+            <a href="{% url 'balance' %}" class="btn">Мой баланс</a>
+            {% if request.user.is_authenticated %}
+                {% if show_admin_panel %}
+                    <a href="{% url 'admin_dashboard' %}" class="btn">Панель администратора</a>
+                {% endif %}
+                {% if show_manager_panel %}
+                    <a href="{% url 'manager_dashboard' %}" class="btn">Панель менеджера</a>
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'addresses' %}" class="btn">Мои адреса</a>
+            <a href="{% url 'payment_methods' %}" class="btn">Мои способы оплаты</a>
+            <a href="{% url 'support' %}" class="btn">Техническая поддержка</a>
+
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn">Выйти</button>
+            </form>
+
+            <form method="post" action="{% url 'delete_account' %}" 
+                  onsubmit="return confirm('Вы уверены, что хотите удалить аккаунт? Это действие нельзя отменить.')">
+                {% csrf_token %}
+                <button type="submit" class="btn danger">Удалить аккаунт</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if notifications %}
+<div class="profile-notifications" id="notifications-panel" data-user-id="{{ request.user.id }}">
+    <div class="profile-notifications-header">
+        <span>Уведомления</span>
+        <button type="button" id="notifications-close" class="notifications-close-btn" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="profile-notifications-list" id="notifications-list">
+        {% for n in notifications %}
+        <div class="notification-item" data-id="{{ n.id }}">
+            <div>{{ n.text }}</div>
+            <div></div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<button type="button" class="notifications-bell" id="notifications-bell" aria-label="Открыть уведомления" title="Открыть уведомления">
+    <svg viewBox="0 0 24 24" fill="none">
+        <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 7h18s-3 0-3-7z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+</button>
+{% endif %}
+
+<script>
+(function(){
+    try {
+        const list = document.getElementById('notifications-list');
+        // Тоггл модалки и колокола
+        const panel = document.getElementById('notifications-panel');
+        const bell = document.getElementById('notifications-bell');
+        const closeBtn = document.getElementById('notifications-close');
+
+        if (panel && bell && closeBtn) {
+            // По умолчанию модалка открыта, колокол скрыт
+            bell.style.display = 'none';
+            closeBtn.addEventListener('click', function() {
+                panel.style.display = 'none';
+                bell.style.display = 'flex';
+            });
+            bell.addEventListener('click', function() {
+                panel.style.display = '';
+                bell.style.display = 'none';
+            });
+        }
+
+        if (!list) return;
+
+        // Сохраняем уведомления в localStorage (постоянное хранение) — индивидуально для пользователя
+        var userId = panel ? panel.getAttribute('data-user-id') : '';
+        const userKey = 'userNotifications_' + String(userId || '');
+        const incoming = Array.from(list.querySelectorAll('.notification-item')).map(el => ({
+            id: el.getAttribute('data-id') || '',
+            text: el.children[0] ? el.children[0].textContent : '',
+            time: new Date().toLocaleString()
+        })).filter(n => n.id);
+        const stored = JSON.parse(localStorage.getItem(userKey) || '[]');
+        const existingIds = new Set(stored.map(n => n.id));
+        const merged = stored.slice();
+        for (const n of incoming) {
+            if (!existingIds.has(n.id)) merged.unshift(n);
+        }
+        localStorage.setItem(userKey, JSON.stringify(merged.slice(0, 100)));
+    } catch (e) {}
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,755 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои адреса - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+/* === Контейнер адресов === */
+.addresses-content {
+    padding: 60px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.addresses-header {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.addresses-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.addresses-header a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.addresses-header a:hover {
+    text-decoration: underline;
+}
+
+/* === Форма добавления адреса === */
+.add-address-form {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 30px;
+}
+
+.add-address-form h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-color);
+}
+
+.form-group input,
+.form-group select {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--text-color);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+    border: 1px solid;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    border-color: var(--text-color);
+}
+
+.btn-primary:hover {
+    filter: brightness(90%);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+}
+
+/* === Список адресов === */
+.addresses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.address-card {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+}
+
+/* Светлая тема: черные грани для карточек адресов */
+body:not(.dark-theme) .address-card {
+    border: 1px solid #000;
+    background-color: #fff;
+}
+
+.address-card.primary {
+    border-color: var(--text-color);
+    border-width: 2px;
+}
+
+/* Светлая тема: основная карточка с более толстыми черными гранями */
+body:not(.dark-theme) .address-card.primary {
+    border: 2px solid #000;
+    background-color: #fff;
+}
+
+.address-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    border: 1px solid transparent;
+}
+
+/* Светлая тема: черные грани для бейджа "Основной" */
+body:not(.dark-theme) .address-badge {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #000;
+}
+
+/* Темная тема: белые грани */
+.dark-theme .address-badge {
+    background-color: #000;
+    color: #fff;
+    border: 1px solid #fff;
+}
+
+.address-header {
+    margin-bottom: 16px;
+}
+
+.address-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.address-details {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-color-secondary);
+    margin-bottom: 16px;
+}
+
+.address-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+.btn-danger {
+    background-color: transparent;
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+.btn-danger:hover {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+}
+
+/* Форма редактирования адреса */
+.edit-address-form {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.edit-address-form .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.edit-address-form .btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.edit-address-form .btn-primary {
+    background: var(--text-color);
+    color: var(--bg-color);
+    border-color: var(--text-color);
+}
+
+.edit-address-form .btn-secondary {
+    background: var(--bg-color);
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+
+.edit-address-form .btn:hover {
+    filter: brightness(90%);
+}
+
+/* Темная тема для формы редактирования */
+.dark-theme .edit-address-form {
+    border-top-color: #333;
+}
+
+.empty-addresses {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-addresses h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.empty-addresses p {
+    color: var(--text-color-secondary);
+    margin-bottom: 24px;
+}
+
+/* Темная тема */
+.dark-theme .add-address-form,
+.dark-theme .address-card {
+    background-color: #1a1a1a;
+    border-color: #333;
+}
+
+.dark-theme .form-group input,
+.dark-theme .form-group select {
+    background-color: #1a1a1a;
+    border-color: #333;
+}
+
+.dark-theme .form-group input:focus,
+.dark-theme .form-group select:focus {
+    border-color: #fff;
+}
+
+/* Современная галочка (чекбокс) */
+.checkbox-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-modern input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #000;
+    border-radius: 4px;
+    background: transparent;
+    position: relative;
+    display: inline-block;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Светлая тема: черные грани */
+body:not(.dark-theme) .checkbox-modern input[type="checkbox"] {
+    border: 1px solid #000;
+    background: #fff;
+}
+
+/* Тёмная тема: белые грани */
+.dark-theme .checkbox-modern input[type="checkbox"] {
+    border: 1px solid #fff;
+    background: transparent;
+}
+
+.checkbox-modern input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.15);
+}
+
+/* Светлая тема: при выборе - белый квадратик внутри черной рамки */
+body:not(.dark-theme) .checkbox-modern input[type="checkbox"]:checked {
+    background: #000;
+    border-color: #000;
+}
+
+body:not(.dark-theme) .checkbox-modern input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-radius: 2px;
+}
+
+/* Тёмная тема: при выборе - белый квадратик */
+.dark-theme .checkbox-modern input[type="checkbox"]:checked {
+    background: #fff;
+    border-color: #fff;
+}
+
+.dark-theme .checkbox-modern input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 10px;
+    height: 10px;
+    background: #000;
+    border-radius: 2px;
+}
+
+/* Тёмная тема — фокус-кольцо светлее */
+.dark-theme .checkbox-modern input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.2);
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+    .addresses-content {
+        padding: 40px 15px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .address-actions {
+        flex-direction: column;
+    }
+    
+    .address-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .edit-address-form .form-actions {
+        flex-direction: column;
+    }
+    
+    .edit-address-form .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="addresses-content">
+    <div class="addresses-header">
+        <h1>Мои адреса</h1>
+        <a href="{% url 'profile' %}">← Вернуться в профиль</a>
+    </div>
+
+    <!-- Форма добавления адреса -->
+    <div class="add-address-form">
+        <h2>Добавить новый адрес</h2>
+        <form id="add-address-form">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="address_title">Название адреса (например, "Дом", "Офис")</label>
+                    <input type="text" id="address_title" name="address_title" placeholder="Дом">
+                </div>
+                <div class="form-group">
+                    <label for="city_name">Город *</label>
+                    <input type="text" id="city_name" name="city_name" required placeholder="Москва">
+                </div>
+                <div class="form-group">
+                    <label for="street_name">Улица *</label>
+                    <input type="text" id="street_name" name="street_name" required placeholder="Ленина">
+                </div>
+                <div class="form-group">
+                    <label for="house_number">Дом *</label>
+                    <input type="text" id="house_number" name="house_number" required placeholder="10">
+                </div>
+                <div class="form-group">
+                    <label for="apartment_number">Квартира</label>
+                    <input type="text" id="apartment_number" name="apartment_number" placeholder="25">
+                </div>
+                <div class="form-group">
+                    <label for="postal_code">Почтовый индекс *</label>
+                    <input type="text" id="postal_code" name="postal_code" required placeholder="123456">
+                </div>
+                <div class="form-group full-width checkbox-group">
+                    <label class="checkbox-modern" for="is_primary">
+                        <input type="checkbox" id="is_primary" name="is_primary">
+                        <span>Сделать основным адресом</span>
+                    </label>
+                </div>
+            </div>
+            <div id="add-address-error" class="form-error" style="display: none; margin-bottom: 10px;"></div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Добавить адрес</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Список адресов -->
+    {% if addresses %}
+    <div class="addresses-list">
+        {% for address in addresses %}
+        <div class="address-card {% if address.is_primary %}primary{% endif %}" id="address-{{ address.id }}">
+            {% if address.is_primary %}
+            <div class="address-badge">Основной</div>
+            {% endif %}
+            <div class="address-header">
+                <div class="address-title">
+                    {{ address.address_title|default:"Адрес" }}
+                </div>
+            </div>
+            <div class="address-details" id="address-details-{{ address.id }}">
+                <p><strong>Город:</strong> {{ address.city_name }}</p>
+                <p><strong>Улица:</strong> {{ address.street_name }}</p>
+                <p><strong>Дом:</strong> {{ address.house_number }}</p>
+                {% if address.apartment_number %}
+                <p><strong>Квартира:</strong> {{ address.apartment_number }}</p>
+                {% endif %}
+                <p><strong>Почтовый индекс:</strong> {{ address.postal_code }}</p>
+            </div>
+            
+            <!-- Форма редактирования (скрыта по умолчанию) -->
+            <form class="edit-address-form" id="edit-form-{{ address.id }}" style="display: none;" data-address-id="{{ address.id }}">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit_address_title_{{ address.id }}">Название адреса</label>
+                        <input type="text" id="edit_address_title_{{ address.id }}" name="address_title" value="{{ address.address_title|default:'' }}" placeholder="Дом, Работа и т.д.">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_city_name_{{ address.id }}">Город *</label>
+                        <input type="text" id="edit_city_name_{{ address.id }}" name="city_name" value="{{ address.city_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_street_name_{{ address.id }}">Улица *</label>
+                        <input type="text" id="edit_street_name_{{ address.id }}" name="street_name" value="{{ address.street_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_house_number_{{ address.id }}">Дом *</label>
+                        <input type="text" id="edit_house_number_{{ address.id }}" name="house_number" value="{{ address.house_number }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_apartment_number_{{ address.id }}">Квартира</label>
+                        <input type="text" id="edit_apartment_number_{{ address.id }}" name="apartment_number" value="{{ address.apartment_number|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_postal_code_{{ address.id }}">Почтовый индекс *</label>
+                        <input type="text" id="edit_postal_code_{{ address.id }}" name="postal_code" value="{{ address.postal_code }}" required>
+                    </div>
+                    <div class="form-group full-width checkbox-group">
+                        <label class="checkbox-modern" for="edit_is_primary_{{ address.id }}">
+                            <input type="checkbox" id="edit_is_primary_{{ address.id }}" name="is_primary" {% if address.is_primary %}checked{% endif %}>
+                            <span>Сделать основным адресом</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="edit-address-error-{{ address.id }}" class="form-error" style="display: none; margin-bottom: 10px;"></div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <button type="button" class="btn btn-secondary" onclick="cancelEdit({{ address.id }})">Отмена</button>
+                </div>
+            </form>
+            
+            <div class="address-actions" id="address-actions-{{ address.id }}">
+                {% if not address.is_primary %}
+                <button type="button" class="btn btn-secondary btn-small" onclick="setPrimaryAddress({{ address.id }})">Сделать основным</button>
+                {% endif %}
+                <button type="button" class="btn btn-secondary btn-small" onclick="editAddress({{ address.id }})">Редактировать</button>
+                <button type="button" class="btn btn-danger btn-small" onclick="deleteAddress({{ address.id }})">Удалить</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-addresses">
+        <h2>У вас пока нет сохраненных адресов</h2>
+        <p>Добавьте адрес доставки, чтобы быстрее оформлять заказы</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if(document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for(let cookie of cookies){
+            cookie = cookie.trim();
+            if(cookie.startsWith(name + '=')){
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
+        }
+    }
+    if(!cookieValue){
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if(csrfInput) cookieValue = csrfInput.value;
+    }
+    return cookieValue;
+}
+
+// Загрузка адресов при загрузке страницы
+async function loadAddresses() {
+    try {
+        const response = await fetch('/api/addresses/', {
+            method: 'GET',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            credentials: 'same-origin'
+        });
+        if (response.ok) {
+            const data = await response.json();
+            // Обновляем список адресов (можно реализовать динамическое обновление)
+        }
+    } catch(err) {
+        console.error('Ошибка загрузки адресов:', err);
+    }
+}
+
+// Добавление адреса
+document.getElementById('add-address-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const errorDiv = document.getElementById('add-address-error');
+    errorDiv.style.display = 'none';
+    
+    const data = {
+        address_title: document.getElementById('address_title').value.trim(),
+        city_name: document.getElementById('city_name').value.trim(),
+        street_name: document.getElementById('street_name').value.trim(),
+        house_number: document.getElementById('house_number').value.trim(),
+        apartment_number: document.getElementById('apartment_number').value.trim(),
+        postal_code: document.getElementById('postal_code').value.trim(),
+        is_primary: document.getElementById('is_primary').checked
+    };
+    
+    try {
+        const response = await fetch('/api/addresses/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            location.reload();
+        } else {
+            errorDiv.textContent = result.error || 'Ошибка при добавлении адреса';
+            errorDiv.style.display = 'block';
+        }
+    } catch(err) {
+        errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+        errorDiv.style.display = 'block';
+    }
+});
+
+// Редактирование адреса
+function editAddress(addressId) {
+    document.getElementById('address-details-' + addressId).style.display = 'none';
+    document.getElementById('address-actions-' + addressId).style.display = 'none';
+    document.getElementById('edit-form-' + addressId).style.display = 'block';
+}
+
+function cancelEdit(addressId) {
+    document.getElementById('address-details-' + addressId).style.display = 'block';
+    document.getElementById('address-actions-' + addressId).style.display = 'block';
+    document.getElementById('edit-form-' + addressId).style.display = 'none';
+    const errorDiv = document.getElementById('edit-address-error-' + addressId);
+    if (errorDiv) errorDiv.style.display = 'none';
+}
+
+// Обработка сохранения редактирования
+document.querySelectorAll('.edit-address-form').forEach(form => {
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const addressId = this.dataset.addressId;
+        const errorDiv = document.getElementById('edit-address-error-' + addressId);
+        errorDiv.style.display = 'none';
+        
+        const data = {
+            address_title: document.getElementById('edit_address_title_' + addressId).value.trim(),
+            city_name: document.getElementById('edit_city_name_' + addressId).value.trim(),
+            street_name: document.getElementById('edit_street_name_' + addressId).value.trim(),
+            house_number: document.getElementById('edit_house_number_' + addressId).value.trim(),
+            apartment_number: document.getElementById('edit_apartment_number_' + addressId).value.trim(),
+            postal_code: document.getElementById('edit_postal_code_' + addressId).value.trim(),
+            is_primary: document.getElementById('edit_is_primary_' + addressId).checked
+        };
+        
+        try {
+            const response = await fetch('/api/addresses/' + addressId + '/', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                errorDiv.textContent = result.error || 'Ошибка при обновлении адреса';
+                errorDiv.style.display = 'block';
+            }
+        } catch(err) {
+            errorDiv.textContent = 'Ошибка соединения: ' + err.message;
+            errorDiv.style.display = 'block';
+        }
+    });
+});
+
+// Установка основного адреса
+async function setPrimaryAddress(addressId) {
+    try {
+        const response = await fetch('/api/addresses/' + addressId + '/', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ is_primary: true })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            location.reload();
+        } else {
+            alert(result.error || 'Ошибка при установке основного адреса');
+        }
+    } catch(err) {
+        alert('Ошибка соединения: ' + err.message);
+    }
+}
+
+// Удаление адреса
+async function deleteAddress(addressId) {
+    if (!confirm('Вы уверены, что хотите удалить этот адрес?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/addresses/' + addressId + '/', {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (response.ok || response.status === 204) {
+            location.reload();
+        } else {
+            const result = await response.json();
+            alert(result.error || 'Ошибка при удалении адреса');
+        }
+    } catch(err) {
+        alert('Ошибка соединения: ' + err.message);
+    }
+}
+
+// Загружаем адреса при загрузке страницы
+loadAddresses();
+</script>
+{% endblock %}
+

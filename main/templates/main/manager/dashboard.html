@@ -1,0 +1,78 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Панель менеджера - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Панель менеджера</h1>
+        <div class="dashboard-actions">
+            <a href="{% url 'profile' %}">В профиль</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>{{ stats.total_courses }}</h3>
+            <p>Всего курсов</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ stats.available_courses }}</h3>
+            <p>Доступно курсов</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ stats.total_orders }}</h3>
+            <p>Всего заказов</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ stats.orders_today }}</h3>
+            <p>Заказов сегодня</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ stats.total_users }}</h3>
+            <p>Всего пользователей</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ stats.active_users }}</h3>
+            <p>Активных пользователей</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ stats.new_tickets }}</h3>
+            <p>Новых обращений</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        {% for block in blocks %}
+        <div class="dashboard-card">
+            <h3><span>{{ block.icon }}</span> {{ block.title }}</h3>
+            <p>{{ block.desc }}</p>
+            <a href="{% url block.url %}">Открыть</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if stats.popular_courses %}
+    <div class="data-section">
+        <h3>Популярные курсы (последний месяц)</h3>
+        <ul class="data-list">
+            {% for course in stats.popular_courses %}
+            <li>
+                <strong>{{ course.title }}</strong> —
+                продано: {{ course.total_sold|default:0 }} шт.
+            </li>
+            {% empty %}
+            <li>Нет данных</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

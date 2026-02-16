@@ -1,0 +1,154 @@
+/* === Модальное окно === */
+.modal {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.open {
+    display: flex;
+}
+
+.modal-dialog {
+    background: var(--bg-color, #fff);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    max-width: 400px;
+    width: 100%;
+    color: var(--text-color, #000);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-color, #000);
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    transform: scale(1.2);
+    color: var(--text);
+}
+
+.modal-body {
+    margin-bottom: 1rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.error {
+    color: var(--text);
+    font-size: 0.9rem;
+    display: none;
+    margin-top: 0.25rem;
+}
+
+.error.show {
+    display: block;
+}
+
+.error-common {
+    margin-bottom: 1rem;
+    color: var(--text);
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    background: var(--surface);
+    border: 1px solid var(--input-border);
+}
+
+.toggle-password {
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-color, #000);
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper button.toggle-password {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0;
+    width: auto;
+    height: auto;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.login-container {
+    max-width: 400px;
+    margin: 2rem auto;
+}
+
+.btn-secondary.show {
+    display: inline-block !important;
+}
+
+#passwordGroup {
+    display: none;
+}
+
+#passwordGroup.show {
+    display: block;
+}
+
+/* === Адаптивность === */
+@media (max-width: 768px) {
+    .modal-dialog {
+        max-width: 90%;
+        padding: 1rem;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .modal-actions button {
+        width: 100%;
+    }
+}
+

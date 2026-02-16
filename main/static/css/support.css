@@ -1,0 +1,409 @@
+/* === Переменные для темы === */
+body.light {
+    --bg-color: #fff;
+    --text-color: #000;
+    --card-bg: #fff;
+    --border-color: #ddd;
+    --brand: #000;
+    --brand-contrast: #fff;
+}
+
+body.dark, .dark-theme {
+    --bg-color: #1e1e1e;
+    --text-color: #fff;
+    --card-bg: #2a2a2a;
+    --border-color: #333;
+    --brand: #fff;
+    --brand-contrast: #000;
+}
+
+/* === Основные стили === */
+.support-page {
+    max-width: 1000px;
+    margin: 60px auto;
+    padding: 20px;
+    color: var(--text-color);
+}
+
+.support-title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 40px;
+    color: var(--text-color);
+}
+
+/* === Форма создания обращения === */
+.support-form-container {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 40px;
+}
+
+.support-form-container h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.btn-submit {
+    padding: 12px 24px;
+    background: var(--brand);
+    color: var(--brand-contrast);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* === Контейнер обращений === */
+.tickets-container {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.tickets-container h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+.tickets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ticket-item {
+    background: var(--bg-color);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.ticket-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ticket-info {
+    flex: 1;
+}
+
+.ticket-subject {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-color);
+}
+
+.ticket-date {
+    font-size: 12px;
+    color: #999;
+}
+
+.ticket-status {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-new {
+    background: #3498db;
+    color: #fff;
+}
+
+.status-processing {
+    background: #f39c12;
+    color: #fff;
+}
+
+.status-resolved {
+    background: #27ae60;
+    color: #fff;
+}
+
+.status-closed {
+    background: #95a5a6;
+    color: #fff;
+}
+
+.ticket-message {
+    margin-bottom: 15px;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.ticket-message p {
+    margin: 0;
+}
+
+.ticket-response {
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border-left: 3px solid var(--brand);
+}
+
+.ticket-response strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--brand);
+}
+
+.ticket-response p {
+    margin: 0;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.btn-view {
+    display: inline-block;
+    padding: 8px 16px;
+    background: var(--brand);
+    color: var(--brand-contrast);
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-view:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.no-tickets {
+    text-align: center;
+    color: var(--text-color);
+    font-style: italic;
+    padding: 40px 20px;
+}
+
+/* === Детальный просмотр обращения === */
+.ticket-detail {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.ticket-message-full,
+.ticket-response-full {
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.ticket-message-full h3,
+.ticket-response-full h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.ticket-message-full p,
+.ticket-response-full p {
+    color: var(--text-color);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.ticket-response-full {
+    border-left: 3px solid var(--brand);
+}
+
+.ticket-waiting {
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    color: var(--text-color);
+    font-style: italic;
+}
+
+.ticket-actions {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-back {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--brand);
+    color: var(--brand-contrast);
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* === Адаптивность === */
+@media (max-width: 768px) {
+    .support-page {
+        margin-top: 50px;
+        padding: 15px;
+    }
+    
+    .support-title {
+        font-size: 24px;
+        margin-bottom: 30px;
+    }
+    
+    .support-form-container,
+    .tickets-container,
+    .ticket-detail {
+        padding: 20px;
+    }
+    
+    .support-form-container h2,
+    .tickets-container h2 {
+        font-size: 20px;
+    }
+    
+    .ticket-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .ticket-status {
+        align-self: flex-start;
+    }
+    
+    .ticket-subject {
+        font-size: 16px;
+    }
+    
+    .ticket-message-full,
+    .ticket-response-full {
+        padding: 16px;
+    }
+    
+    .btn-submit,
+    .btn-view,
+    .btn-back {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .support-page {
+        margin-top: 40px;
+        padding: 10px;
+    }
+    
+    .support-title {
+        font-size: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .support-form-container,
+    .tickets-container,
+    .ticket-detail {
+        padding: 16px;
+        border-radius: 8px;
+    }
+    
+    .support-form-container h2,
+    .tickets-container h2 {
+        font-size: 18px;
+        margin-bottom: 16px;
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .ticket-item {
+        padding: 16px;
+    }
+    
+    .ticket-subject {
+        font-size: 15px;
+    }
+    
+    .ticket-message {
+        font-size: 14px;
+    }
+}
+

@@ -1,0 +1,195 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Промокоды - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="table-wrap">
+    <div class="table-header">
+        <h1>Промокоды</h1>
+        <div class="table-actions-header">
+            <a href="{% url 'admin_dashboard' %}">← Назад</a>
+            <a href="{% url 'admin_promotion_add' %}">+ Добавить промокод</a>
+            <button type="button" id="deleteSelectedBtn" onclick="deleteSelectedPromotions()" disabled class="btn btn-danger" style="opacity: 0.5;">Удалить выбранные</button>
+        </div>
+    </div>
+
+    <form method="get" class="table-filters" style="margin-bottom: 20px;">
+        <input type="text" name="q" value="{{ q }}" placeholder="Поиск по коду или описанию...">
+        <button type="submit">Найти</button>
+        {% if q %}<a href="{% url 'admin_promotions_list' %}" class="table-actions-header a">Сбросить</a>{% endif %}
+    </form>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 40px;">
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                </th>
+                <th>ID</th>
+                <th>Код</th>
+                <th>Описание</th>
+                <th>Скидка (%)</th>
+                <th>Дата начала</th>
+                <th>Дата окончания</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for promo in page_obj %}
+            <tr>
+                <td>
+                    <input type="checkbox" class="row-checkbox" value="{{ promo.id }}" onchange="updateDeleteButton()">
+                </td>
+                <td>{{ promo.id }}</td>
+                <td><strong>{{ promo.promo_code }}</strong></td>
+                <td>{{ promo.promo_description|default:"—"|truncatewords:10 }}</td>
+                <td>{{ promo.discount }}%</td>
+                <td>{{ promo.start_date|date:"d.m.Y"|default:"—" }}</td>
+                <td>{{ promo.end_date|date:"d.m.Y"|default:"—" }}</td>
+                <td>
+                    <span class="status-badge {% if promo.is_active %}status-active{% else %}status-blocked{% endif %}">
+                        {% if promo.is_active %}Активен{% else %}Неактивен{% endif %}
+                    </span>
+                </td>
+                <td class="table-actions">
+                    <a href="{% url 'admin_promotion_edit' promo.id %}">Изменить</a>
+                    <button type="button" class="danger" onclick="deletePromotion({{ promo.id }}, '{{ promo.promo_code|escapejs }}')">Удалить</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" style="text-align:center; padding:40px;">Промокоды не найдены</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if page_obj.has_other_pages %}
+    <div class="data-pager">
+        {% if page_obj.has_previous %}
+        <a href="?page=1{% if q %}&q={{ q }}{% endif %}">« Первая</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">‹ Предыдущая</a>
+        {% endif %}
+        <span class="current">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">Следующая ›</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}">Последняя »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+async function deletePromotion(promoId, promoCode) {
+    if (!confirm(`Удалить промокод "${promoCode}"?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/management/promotions/${promoId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+        const result = await response.json();
+        
+        if (result.success || response.status === 204) {
+            alert('Промокод успешно удален');
+            location.reload();
+        } else {
+            alert('Ошибка: ' + (result.error || 'Не удалось удалить промокод'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Ошибка при удалении промокода');
+    }
+}
+
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateDeleteButton();
+}
+
+function updateDeleteButton() {
+    const checked = document.querySelectorAll('.row-checkbox:checked');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    if (checked.length > 0) {
+        deleteBtn.disabled = false;
+        deleteBtn.style.opacity = '1';
+        deleteBtn.textContent = `Удалить выбранные (${checked.length})`;
+    } else {
+        deleteBtn.disabled = true;
+        deleteBtn.style.opacity = '0.5';
+        deleteBtn.textContent = 'Удалить выбранные';
+    }
+}
+
+function deleteSelectedPromotions() {
+    const checked = document.querySelectorAll('.row-checkbox:checked');
+    if (checked.length === 0) {
+        alert('Выберите хотя бы один промокод для удаления');
+        return;
+    }
+    
+    const ids = Array.from(checked).map(cb => parseInt(cb.value));
+    const count = ids.length;
+    
+    if (!confirm(`Вы уверены, что хотите удалить ${count} промокод${count === 1 ? '' : count < 5 ? 'а' : 'ов'}?`)) {
+        return;
+    }
+    
+    fetch('/api/management/promotions/', {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ ids: ids })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Успешно удалено: ${data.deleted_count} промокод${data.deleted_count === 1 ? '' : data.deleted_count < 5 ? 'а' : 'ов'}`);
+            if (data.errors && data.errors.length > 0) {
+                console.warn('Ошибки при удалении:', data.errors);
+            }
+            location.reload();
+        } else {
+            alert('Ошибка: ' + (data.error || 'Не удалось удалить промокоды'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при массовом удалении промокодов');
+    });
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,632 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block title %}Вход в личный кабинет - MPTCOURSE{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+<link rel="stylesheet" href="{% static 'css/login_modal.css' %}">
+{% endblock %}
+{% block content %}
+<div class="login-content">
+  <div class="login-container">
+    <form class="login-form" id="loginForm" novalidate>
+      {% csrf_token %}
+      <h2>Вход в личный кабинет</h2>
+
+      {% if messages %}
+        {% for message in messages %}
+          {% comment %}Показываем только сообщения о блокировке аккаунта{% endcomment %}
+          {% if 'заблокирован' in message|lower or 'https://t.me/toshaplenka' in message|stringformat:"s" %}
+            <div class="error-message show django-message" style="display: block;" data-message="{{ message }}">
+              {{ message }}
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      <div class="error-message" id="errorMessage"></div>
+      <div class="success-message" id="successMessage"></div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="your@email.com" required autocomplete="email">
+      </div>
+
+      <div class="form-group" id="passwordGroup">
+        <label for="password">Пароль</label>
+        <div class="input-wrapper">
+          <input type="password" id="password" name="password" placeholder="Введите пароль" autocomplete="current-password" disabled>
+          <button type="button" class="toggle-password" data-target="password" aria-label="Показать пароль">👁</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">Продолжить</button>
+
+      <button type="button" class="btn btn-secondary" id="registerBtn" onclick="window.location.href='/register/'">Зарегистрироваться</button>
+
+      <a href="/" class="back-link">← Вернуться на главную</a>
+      <div style="text-align: center; margin-top: 16px;">
+        <a href="#" class="forgot-link" id="forgotLink">Забыли пароль?</a>
+        <div style="margin-top: 8px; font-size: 13px; color: var(--text-color-secondary);">
+          Если забыли секретное слово, обратитесь в 
+          <a href="https://t.me/toshaplenka" target="_blank" rel="noopener noreferrer" class="link-accent">поддержку</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Модальное окно восстановления пароля -->
+<div class="modal" id="passwordRecoveryModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">Восстановление пароля</h3>
+      <button class="modal-close" aria-label="Закрыть" id="modalCloseBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="step step-1">
+        <div class="form-group">
+          <label for="fp_phone">Телефон (Россия)</label>
+          <input type="tel" id="fp_phone" placeholder="+7 999 123-45-67" inputmode="tel">
+          <div class="error" id="fp_phone_err">Введите корректный номер в формате +7XXXXXXXXXX</div>
+        </div>
+        <div class="form-group">
+          <label for="fp_email">Email</label>
+          <input type="email" id="fp_email" placeholder="you@example.com">
+          <div class="error" id="fp_email_err">Введите корректный email</div>
+        </div>
+        <div class="form-group">
+          <label for="fp_fname">Имя</label>
+          <input type="text" id="fp_fname" placeholder="Иван">
+          <div class="error" id="fp_fname_err">Укажите имя</div>
+        </div>
+        <div class="form-group">
+          <label for="fp_lname">Фамилия</label>
+          <input type="text" id="fp_lname" placeholder="Иванов">
+          <div class="error" id="fp_lname_err">Укажите фамилию</div>
+        </div>
+        <div class="form-group">
+          <label for="fp_secret_word">Секретное слово</label>
+          <div class="input-wrapper">
+            <input type="password" id="fp_secret_word" placeholder="Введите секретное слово">
+            <button type="button" class="toggle-password" data-target="fp_secret_word" aria-label="Показать секретное слово">👁</button>
+          </div>
+          <div class="error" id="fp_secret_word_err">Укажите секретное слово</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="fp_cancel">Отмена</button>
+          <button class="btn" id="fp_next">Далее</button>
+        </div>
+      </div>
+      <div class="step step-2 hidden">
+        <div class="form-group">
+          <label for="fp_pass1">Новый пароль</label>
+          <div class="input-wrapper">
+            <input type="password" id="fp_pass1" placeholder="Введите новый пароль">
+            <button type="button" class="toggle-password" data-target="fp_pass1" aria-label="Показать пароль">👁</button>
+          </div>
+          <div class="error" id="fp_pass1_err">Пароль должен быть не менее 8 символов, содержать буквы верхнего и нижнего регистра и цифры</div>
+        </div>
+        <div class="form-group">
+          <label for="fp_pass2">Повторите пароль</label>
+          <div class="input-wrapper">
+            <input type="password" id="fp_pass2" placeholder="Повторите пароль">
+            <button type="button" class="toggle-password" data-target="fp_pass2" aria-label="Показать пароль">👁</button>
+          </div>
+          <div class="error" id="fp_pass2_err">Пароли не совпадают</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="fp_back">Назад</button>
+          <button class="btn" id="fp_submit">Сохранить пароль</button>
+        </div>
+      </div>
+      <div class="error error-common" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Обработка Django messages с ссылками
+    const djangoMessages = document.querySelectorAll('.django-message');
+    djangoMessages.forEach(function(msg) {
+      const messageText = msg.getAttribute('data-message') || msg.textContent;
+      if (messageText.includes('https://t.me/toshaplenka')) {
+        msg.innerHTML = messageText.replace('https://t.me/toshaplenka', '<a href="https://t.me/toshaplenka" target="_blank" rel="noopener noreferrer" class="link-accent">https://t.me/toshaplenka</a>');
+      }
+    });
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordGroup = document.getElementById('passwordGroup');
+    const passwordInput = document.getElementById('password');
+    const registerBtn = document.getElementById('registerBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+
+    let emailChecked = false;
+    let emailExists = false;
+
+    function showError(message) {
+      // Поддержка HTML в сообщениях об ошибках (для ссылок)
+      errorMessage.innerHTML = message;
+      errorMessage.classList.add('show');
+      successMessage.classList.remove('show');
+    }
+
+    function showSuccess(message) {
+      successMessage.textContent = message;
+      successMessage.classList.add('show');
+      errorMessage.classList.remove('show');
+    }
+
+    function hideMessages() {
+      errorMessage.classList.remove('show');
+      successMessage.classList.remove('show');
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      if (!cookieValue) {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput) {
+          cookieValue = csrfInput.value;
+        }
+      }
+      return cookieValue;
+    }
+
+    async function checkEmail(email) {
+      try {
+        const response = await fetch('/api/check-email/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ email: email })
+        });
+
+        if (!response.ok) {
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch (e) {
+            errorData = { error: `HTTP error! status: ${response.status}` };
+          }
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.exists === true;
+      } catch (error) {
+        showError('Ошибка проверки email: ' + error.message);
+        return null;
+      }
+    }
+
+    async function login(email, password) {
+      try {
+        const response = await fetch('/api/login/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ email: email, password: password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          return { success: false, error: data.error || 'Ошибка авторизации' };
+        }
+
+        return data;
+      } catch (error) {
+        return { success: false, error: 'Ошибка соединения: ' + error.message };
+      }
+    }
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      hideMessages();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Проверка...';
+
+      const email = emailInput.value.trim();
+
+      if (!email) {
+        showError('Введите email');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Продолжить';
+        return;
+      }
+
+      if (!emailChecked) {
+        const result = await checkEmail(email);
+        if (result === null) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Продолжить';
+          return;
+        }
+        emailExists = result === true;
+        emailChecked = true;
+
+        if (emailExists) {
+          passwordGroup.classList.add('show');
+          passwordInput.disabled = false;
+          passwordInput.setAttribute('required', 'required');
+          registerBtn.classList.remove('show');
+          submitBtn.style.display = '';
+          passwordInput.focus();
+          submitBtn.textContent = 'Войти';
+          submitBtn.disabled = false;
+        } else {
+          registerBtn.classList.add('show');
+          passwordGroup.classList.remove('show');
+          showError('Аккаунт с таким email не найден');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Продолжить';
+          submitBtn.style.display = 'none';
+        }
+      } else if (emailExists) {
+        const password = passwordInput.value;
+        if (!password) {
+          showError('Введите пароль');
+          submitBtn.disabled = false;
+          return;
+        }
+
+        submitBtn.textContent = 'Вход...';
+        const result = await login(email, password);
+        if (result.success) {
+          showSuccess('Успешный вход! Перенаправление...');
+          submitBtn.disabled = true;
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+        } else {
+          let errorMsg = result.error || 'Неверный пароль';
+          // Делаем ссылки кликабельными в сообщениях об ошибках
+          if (errorMsg.includes('https://t.me/toshaplenka')) {
+            errorMsg = errorMsg.replace('https://t.me/toshaplenka', '<a href="https://t.me/toshaplenka" target="_blank" rel="noopener noreferrer" class="link-accent">https://t.me/toshaplenka</a>');
+          }
+          showError(errorMsg);
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Войти';
+          passwordInput.value = '';
+        }
+      }
+    });
+
+    emailInput.addEventListener('input', function () {
+      if (emailChecked) {
+        emailChecked = false;
+        emailExists = false;
+        passwordGroup.classList.remove('show');
+        passwordInput.disabled = true;
+        passwordInput.removeAttribute('required');
+        registerBtn.classList.remove('show');
+        passwordInput.value = '';
+        submitBtn.textContent = 'Продолжить';
+        submitBtn.style.display = '';
+        hideMessages();
+      }
+    });
+
+    // Модальное окно восстановления пароля и логика
+    const modal = document.getElementById('passwordRecoveryModal');
+    const forgotLink = document.getElementById('forgotLink');
+    const closeBtn = document.getElementById('modalCloseBtn');
+    const cancelBtn = modal.querySelector('#fp_cancel');
+    const nextBtn = modal.querySelector('#fp_next');
+    const backBtn = modal.querySelector('#fp_back');
+    const submitNewBtn = modal.querySelector('#fp_submit');
+
+    function openModal() {
+      resetRecoveryForm();
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    forgotLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal();
+    });
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetRecoveryForm();
+      closeModal();
+    });
+    cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetRecoveryForm();
+      closeModal();
+    });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        resetRecoveryForm();
+        closeModal();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('open')) {
+        resetRecoveryForm();
+        closeModal();
+      }
+    });
+
+    function validatePhone(v) {
+      const d = v.replace(/\D/g, '').replace(/^8/, '7');
+      return /^7\d{10}$/.test(d);
+    }
+
+    function validateEmail(v) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    }
+
+    function formatRuPhone(v) {
+      const d = v.replace(/\D/g, '').replace(/^8/, '7');
+      const s = d.slice(0, 11);
+      let out = '+7';
+      if (s.length > 1) out += ' (' + s.slice(1, 4);
+      if (s.length >= 4) out += ') ' + s.slice(4, 7);
+      if (s.length >= 7) out += '-' + s.slice(7, 9);
+      if (s.length >= 9) out += '-' + s.slice(9, 11);
+      return out;
+    }
+
+    modal.addEventListener('input', function (e) {
+      if (e.target && e.target.id === 'fp_phone') {
+        e.target.value = formatRuPhone(e.target.value);
+      }
+    });
+
+    nextBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const phone = document.getElementById('fp_phone');
+      const email = document.getElementById('fp_email');
+      const fname = document.getElementById('fp_fname');
+      const lname = document.getElementById('fp_lname');
+      const secretWord = document.getElementById('fp_secret_word');
+      let ok = true;
+      
+      // Проверка заполненности и формата полей на клиенте
+      const phoneVal = phone.value.trim();
+      const normalized = phoneVal.replace(/\D/g, '').replace(/^8/, '7');
+      const phoneOk = /^7\d{10}$/.test(normalized);
+      if (!phoneOk) {
+        document.getElementById('fp_phone_err').classList.add('show');
+        ok = false;
+      } else {
+        document.getElementById('fp_phone_err').classList.remove('show');
+      }
+      if (!validateEmail(email.value.trim())) {
+        document.getElementById('fp_email_err').classList.add('show');
+        ok = false;
+      } else {
+        document.getElementById('fp_email_err').classList.remove('show');
+      }
+      if (!fname.value.trim()) {
+        document.getElementById('fp_fname_err').classList.add('show');
+        ok = false;
+      } else {
+        document.getElementById('fp_fname_err').classList.remove('show');
+      }
+      if (!lname.value.trim()) {
+        document.getElementById('fp_lname_err').classList.add('show');
+        ok = false;
+      } else {
+        document.getElementById('fp_lname_err').classList.remove('show');
+      }
+      if (!secretWord.value.trim()) {
+        document.getElementById('fp_secret_word_err').classList.add('show');
+        ok = false;
+      } else {
+        document.getElementById('fp_secret_word_err').classList.remove('show');
+      }
+      
+      const commonErr = ensureCommonErr();
+      if (!ok) {
+        commonErr.textContent = 'Заполните все поля корректно';
+        commonErr.style.display = 'block';
+        return;
+      }
+      
+      // Проверка всех данных на сервере перед переходом ко второму шагу
+      commonErr.textContent = 'Проверка данных...';
+      commonErr.style.display = 'block';
+      commonErr.style.color = '';
+      nextBtn.disabled = true;
+      
+      try {
+        const response = await fetch('/api/verify-reset-data/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            phone: normalized,
+            email: email.value.trim(),
+            first_name: fname.value.trim(),
+            last_name: lname.value.trim(),
+            secret_word: secretWord.value.trim()
+          })
+        });
+        const result = await response.json();
+        
+        if (!response.ok || !result.success) {
+          // Показываем конкретную ошибку
+          let errorMessage = result.error || 'Ошибка проверки данных';
+          
+          // Определяем, какое поле неверно, и показываем ошибку
+          if (errorMessage.includes('email') || errorMessage.includes('не найден')) {
+            document.getElementById('fp_email_err').textContent = errorMessage;
+            document.getElementById('fp_email_err').classList.add('show');
+          } else if (errorMessage.includes('телефон') || errorMessage.includes('номер')) {
+            document.getElementById('fp_phone_err').textContent = errorMessage;
+            document.getElementById('fp_phone_err').classList.add('show');
+          } else if (errorMessage.includes('имя') || errorMessage.includes('фамилия')) {
+            if (errorMessage.includes('имя')) {
+              document.getElementById('fp_fname_err').textContent = errorMessage;
+              document.getElementById('fp_fname_err').classList.add('show');
+            }
+            if (errorMessage.includes('фамилия')) {
+              document.getElementById('fp_lname_err').textContent = errorMessage;
+              document.getElementById('fp_lname_err').classList.add('show');
+            }
+          } else if (errorMessage.includes('секретн')) {
+            document.getElementById('fp_secret_word_err').textContent = errorMessage;
+            document.getElementById('fp_secret_word_err').classList.add('show');
+          }
+          
+          // Делаем ссылки кликабельными
+          let displayMessage = errorMessage;
+          if (errorMessage.includes('https://t.me/toshaplenka')) {
+            displayMessage = errorMessage.replace('https://t.me/toshaplenka', '<a href="https://t.me/toshaplenka" target="_blank" rel="noopener noreferrer" class="link-accent">https://t.me/toshaplenka</a>');
+          }
+          commonErr.innerHTML = displayMessage;
+          commonErr.style.display = 'block';
+          commonErr.style.color = ''; commonErr.classList.add('form-error');
+          return;
+        }
+        
+        // Все проверки пройдены - переходим ко второму шагу
+        commonErr.style.display = 'none';
+        modal.querySelector('.step-1').classList.add('hidden');
+        modal.querySelector('.step-2').classList.remove('hidden');
+      } catch (err) {
+        let errorMsg = err.message || 'Ошибка проверки данных';
+        // Делаем ссылки кликабельными
+        if (errorMsg.includes('https://t.me/toshaplenka')) {
+          errorMsg = errorMsg.replace('https://t.me/toshaplenka', '<a href="https://t.me/toshaplenka" target="_blank" rel="noopener noreferrer" class="link-accent">https://t.me/toshaplenka</a>');
+        }
+        commonErr.innerHTML = errorMsg;
+        commonErr.style.display = 'block';
+        commonErr.style.color = ''; commonErr.classList.add('form-error');
+      } finally {
+        nextBtn.disabled = false;
+      }
+    });
+
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      modal.querySelector('.step-2').classList.add('hidden');
+      modal.querySelector('.step-1').classList.remove('hidden');
+    });
+
+    submitNewBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const pass1 = document.getElementById('fp_pass1');
+      const pass2 = document.getElementById('fp_pass2');
+      let ok = true;
+      function strong(p) {
+        return /[A-ZА-Я]/.test(p) && /[a-zа-я]/.test(p) && /\d/.test(p) && p.length >= 8;
+      }
+      if (!pass1.value || !strong(pass1.value)) {
+        document.getElementById('fp_pass1_err').textContent = 'Не менее 8 символов, буквы верх/низ и цифры';
+        document.getElementById('fp_pass1_err').classList.add('show');
+        ok = false;
+      } else {
+        document.getElementById('fp_pass1_err').classList.remove('show');
+      }
+      if (pass1.value !== pass2.value) {
+        document.getElementById('fp_pass2_err').classList.add('show');
+        ok = false;
+      } else {
+        document.getElementById('fp_pass2_err').classList.remove('show');
+      }
+      const commonErr2 = ensureCommonErr();
+      if (!ok) {
+        commonErr2.textContent = 'Проверьте корректность введённых данных';
+        commonErr2.style.display = 'block';
+        return;
+      }
+
+      try {
+        const phoneVal = document.getElementById('fp_phone').value.trim();
+        const normalized = phoneVal.replace(/\D/g, '').replace(/^8/, '7');
+        const response = await fetch('/api/reset-password/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            phone: normalized,
+            email: document.getElementById('fp_email').value.trim(),
+            first_name: document.getElementById('fp_fname').value.trim(),
+            last_name: document.getElementById('fp_lname').value.trim(),
+            secret_word: document.getElementById('fp_secret_word').value.trim(),
+            password: pass1.value
+          })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Ошибка восстановления пароля');
+        }
+        closeModal();
+        alert('Пароль успешно изменен! Теперь вы можете войти с новым паролем.');
+        window.location.href = '/login/';
+      } catch (err) {
+        const commonErr2 = ensureCommonErr();
+        let errorMsg = err.message || 'Ошибка восстановления пароля';
+        // Делаем ссылки кликабельными
+        if (errorMsg.includes('https://t.me/toshaplenka')) {
+          errorMsg = errorMsg.replace('https://t.me/toshaplenka', '<a href="https://t.me/toshaplenka" target="_blank" rel="noopener noreferrer" class="link-accent">https://t.me/toshaplenka</a>');
+        }
+        commonErr2.innerHTML = errorMsg;
+        commonErr2.style.display = 'block';
+      }
+    });
+
+    function toggleType(input) {
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('.toggle-password');
+      if (!btn) return;
+      const targetId = btn.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      if (input) toggleType(input);
+    });
+
+    function ensureCommonErr() {
+      let el = modal.querySelector('.error-common');
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'error error-common';
+        modal.querySelector('.modal-body').prepend(el);
+      }
+      return el;
+    }
+
+    function resetRecoveryForm() {
+      modal.querySelector('.step-1').classList.remove('hidden');
+      modal.querySelector('.step-2').classList.add('hidden');
+      ['fp_phone', 'fp_email', 'fp_fname', 'fp_lname', 'fp_secret_word', 'fp_pass1', 'fp_pass2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      document.querySelectorAll('.error').forEach(el => el.classList.remove('show'));
+      ensureCommonErr().style.display = 'none';
+    }
+  });
+</script>
+{% endblock %}

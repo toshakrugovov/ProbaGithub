@@ -1,0 +1,96 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Управление поддержкой - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="table-wrap">
+    <div class="table-header">
+        <h1>Управление поддержкой</h1>
+        <div class="table-filters">
+            <form method="get" style="display: flex; gap: 8px;">
+                <input type="text" name="q" value="{{ q }}" placeholder="Поиск...">
+                <select name="status">
+                    <option value="">Все статусы</option>
+                    <option value="new" {% if status_filter == 'new' %}selected{% endif %}>Новые</option>
+                    <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>В работе</option>
+                    <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Решено</option>
+                </select>
+                <select name="assigned">
+                    <option value="">Все</option>
+                    <option value="assigned" {% if assigned_filter == 'assigned' %}selected{% endif %}>Назначенные</option>
+                    <option value="unassigned" {% if assigned_filter == 'unassigned' %}selected{% endif %}>Неназначенные</option>
+                </select>
+                <button type="submit">Фильтровать</button>
+            </form>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+        <a href="{% url 'admin_dashboard' %}" class="table-actions-header a">← Назад</a>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Пользователь</th>
+                <th>Тема</th>
+                <th>Ответственный</th>
+                <th>Статус</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in page_obj %}
+            <tr>
+                <td>#{{ ticket.id }}</td>
+                <td>{{ ticket.user.username|default:"Гость" }}</td>
+                <td>{{ ticket.subject|truncatewords:10 }}</td>
+                <td>
+                    {% if ticket.assigned_to %}
+                    <span class="assigned-badge">{{ ticket.assigned_to.username }}</span>
+                    {% else %}
+                    <span style="color: var(--text-color-secondary);">Не назначен</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="status-badge status-{{ ticket.ticket_status }}">
+                        {{ ticket.get_ticket_status_display }}
+                    </span>
+                </td>
+                <td>{{ ticket.created_at|date:"d.m.Y H:i" }}</td>
+                <td class="table-actions">
+                    <a href="{% url 'admin_support_detail' ticket_id=ticket.id %}">Открыть</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px;">Обращения не найдены</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pager" style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 20px;">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status_filter }}&assigned={{ assigned_filter }}" style="padding: 8px 12px; border: 1px solid #000; border-radius: 6px; text-decoration: none;">← Назад</a>
+        {% else %}
+        <span>← Назад</span>
+        {% endif %}
+        <span>Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status_filter }}&assigned={{ assigned_filter }}" style="padding: 8px 12px; border: 1px solid #000; border-radius: 6px; text-decoration: none;">Вперед →</a>
+        {% else %}
+        <span>Вперед →</span>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

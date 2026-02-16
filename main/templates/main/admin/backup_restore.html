@@ -1,0 +1,42 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Восстановление из бэкапа - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="confirm-wrap">
+    <div class="confirm-box">
+        <h1>🔄 Восстановление базы данных</h1>
+        <p>Вы уверены, что хотите восстановить базу данных из бэкапа <strong>"{{ backup.backup_name }}"</strong>?</p>
+        <div style="margin-bottom: 20px; text-align: left;">
+            <p><strong>Дата создания бэкапа:</strong> {{ backup.created_at|date:"d.m.Y H:i" }}</p>
+            <p><strong>Размер:</strong> {{ backup.get_file_size_mb }} МБ</p>
+            <p><strong>Тип:</strong> {% if backup.is_automatic %}Автоматический{% else %}Ручной{% endif %}</p>
+            {% if backup.created_by %}
+            <p><strong>Создан пользователем:</strong> {{ backup.created_by.username }}</p>
+            {% endif %}
+        </div>
+        <div style="background: #fff3cd; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+            <p style="margin: 0; color: #856404; font-weight: 600;">⚠️ Внимание!</p>
+            <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #856404;">
+                <li>Текущая база данных будет заменена данными из бэкапа</li>
+                <li>Все изменения, сделанные после создания этого бэкапа, будут потеряны</li>
+                <li>Перед восстановлением будет создана резервная копия текущей БД</li>
+                <li>После восстановления необходимо перезапустить сервер</li>
+            </ul>
+        </div>
+        <p class="form-error" style="font-weight: 600;">Это действие нельзя отменить!</p>
+        <form method="post" class="confirm-actions">
+            {% csrf_token %}
+            <button type="submit" class="btn">Да, восстановить</button>
+            <a href="{% url 'admin_backups_list' %}">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

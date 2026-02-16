@@ -1,0 +1,1024 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}MPTCOURSE - Каталог курсов{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+{% endblock %}
+
+{% block content %}
+<script>
+const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+
+// Применение сохраненных фильтров при загрузке страницы
+(function() {
+    if (!isAuthenticated) return;
+    
+    // Проверяем, есть ли GET параметры (если есть - не применяем сохраненные фильтры)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.toString()) return; // Есть GET параметры - не применяем сохраненные
+    
+    // Загружаем сохраненные фильтры
+    fetch('/api/settings/', {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(function(response) {
+        if (response.ok) {
+            return response.json();
+        }
+        throw new Error('Network response was not ok');
+    })
+    .then(function(data) {
+        if (data.success && data.settings && data.settings.saved_filters) {
+            const catalogFilters = data.settings.saved_filters.catalog || {};
+            
+            // Применяем сохраненные фильтры, если они есть и форма пустая
+            if (catalogFilters.q || catalogFilters.category || catalogFilters.sort) {
+                const form = document.getElementById('catalogFiltersForm');
+                if (form) {
+                    if (catalogFilters.q && !document.getElementById('filterQ').value) {
+                        document.getElementById('filterQ').value = catalogFilters.q;
+                    }
+                    if (catalogFilters.category && !document.getElementById('filterCategory').value) {
+                        document.getElementById('filterCategory').value = catalogFilters.category;
+                    }
+                    if (catalogFilters.sort && !document.getElementById('filterSort').value) {
+                        document.getElementById('filterSort').value = catalogFilters.sort;
+                    }
+                    
+                    // Автоматически применяем фильтры, если они были сохранены
+                    // (опционально - можно закомментировать, если не нужно автоматическое применение)
+                    // form.submit();
+                }
+            }
+        }
+    })
+    .catch(function(err) {
+        // Игнорируем ошибки при загрузке настроек
+        console.warn('Не удалось загрузить сохраненные фильтры:', err);
+    });
+})();
+</script>
+
+<!-- Фильтры и поиск -->
+<section class="catalog-filters">
+    <div class="container filters-container">
+        <form method="get" class="filters-form" id="catalogFiltersForm">
+            <input type="text" name="q" id="filterQ" value="{{ request.GET.q|default:'' }}" placeholder="Поиск курсов..." class="search-input">
+            <select name="category" id="filterCategory" class="custom-select">
+                <option value="">Все категории</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if request.GET.category|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category.category_name }}</option>
+                {% endfor %}
+            </select>
+            <select name="sort" id="filterSort" class="custom-select">
+                <option value="">Сортировка</option>
+                <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>По возрастанию цены</option>
+                <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>По убыванию цены</option>
+                <option value="popular" {% if request.GET.sort == 'popular' %}selected{% endif %}>Популярные</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Применить</button>
+        </form>
+    </div>
+</section>
+
+<script>
+// Сохранение фильтров каталога
+(function() {
+    if (!isAuthenticated) return;
+    
+    // Функция для получения CSRF токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                    break;
+                }
+            }
+        }
+        if (!cookieValue) {
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfInput) cookieValue = csrfInput.value;
+        }
+        return cookieValue;
+    }
+    
+    // Функция для сохранения фильтров
+    function saveFilters() {
+        const filters = {
+            catalog: {
+                q: document.getElementById('filterQ').value || '',
+                category: document.getElementById('filterCategory').value || '',
+                sort: document.getElementById('filterSort').value || ''
+            }
+        };
+        
+        fetch('/api/settings/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ saved_filters: filters })
+        }).catch(function(err) {
+            console.warn('Не удалось сохранить фильтры:', err);
+        });
+    }
+    
+    // Сохраняем фильтры при изменении формы
+    const form = document.getElementById('catalogFiltersForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            // Сохраняем фильтры перед отправкой формы
+            saveFilters();
+        });
+        
+        // Также сохраняем при изменении полей (debounce)
+        let saveTimeout;
+        const inputs = ['filterQ', 'filterCategory', 'filterSort'];
+        inputs.forEach(function(inputId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('change', function() {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(saveFilters, 1000); // Сохраняем через 1 секунду после последнего изменения
+                });
+            }
+        });
+    }
+})();
+</script>
+
+<!-- Секция курсов (загрузка через API) -->
+<section class="products-section catalog-section">
+    <div class="container">
+        <div id="catalog-loading" class="catalog-loading">Загрузка каталога...</div>
+        <div id="products-grid" class="products-grid" style="display: none;"></div>
+        <p id="catalog-empty" class="catalog-empty" style="display: none;">Курсы не найдены.</p>
+    </div>
+</section>
+
+<!-- Модальное окно -->
+<div id="productModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <div class="modal-left">
+            <div class="modal-image-wrapper">
+                <button class="slider-arrow prev" onclick="prevImage()" aria-label="Предыдущее изображение">‹</button>
+                <img id="modalMainImage" class="modal-main-image" src="" alt="">
+                <button class="slider-arrow next" onclick="nextImage()" aria-label="Следующее изображение">›</button>
+            </div>
+            <div class="modal-thumbnails" id="modalThumbnails"></div>
+        </div>
+        <div class="modal-right">
+            <h2 id="modalProductName"></h2>
+            <p id="modalPrice" style="font-weight:bold;"></p>
+            <p id="modalAvailability" style="display:none;"></p>
+            <p id="modalBrand" style="display:none;"></p>
+            <p id="modalCountry" style="display:none;"></p>
+            <p id="modalSupplier" style="display:none;"></p>
+            <p id="modalDescription"></p>
+            <p id="modalIncludedContent" class="modal-included-content" style="margin-top:8px;"></p>
+
+            <div class="modal-sizes" id="modalSizesBlock" style="display:none;">
+                <label for="modalSizeSelect">Выберите размер:</label>
+                <select id="modalSizeSelect">
+                    <option value="" disabled selected>Выберите размер</option>
+                </select>
+                <div class="size-warning" id="sizeWarning">⚠ Пожалуйста, выберите размер!</div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="add-cart" id="cartButton" onclick="toggleCart()">Добавить в корзину</button>
+                <button class="add-fav" id="favButton" onclick="toggleFavorites()">Добавить в избранное</button>
+            </div>
+
+            <!-- Секция отзывов -->
+            <div class="modal-reviews" id="modalReviews">
+                <h3>Отзывы</h3>
+                <div class="reviews-summary" id="reviewsSummary">
+                    <div class="rating-display">
+                        <span class="avg-rating" id="avgRating">-</span>
+                        <div class="stars" id="starsDisplay"></div>
+                        <span class="reviews-count" id="reviewsCount">(0 отзывов)</span>
+                    </div>
+                </div>
+                
+                <!-- Форма добавления отзыва скрыта в модальном окне, доступна на странице отзывов -->
+                
+                <!-- Список отзывов -->
+                <div class="reviews-list" id="reviewsList">
+                    <p class="loading-reviews">Загрузка отзывов...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Каталог и товары загружаются через API
+let products = {};
+
+function getCatalogParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        q: params.get('q') || '',
+        category: params.get('category') || '',
+        sort: params.get('sort') || '',
+        page: params.get('page') || 1
+    };
+}
+
+function buildProductFromApi(p) {
+    const priceStr = p.discount && parseFloat(p.discount) > 0
+        ? (p.final_price + ' ₽ (' + p.price + ' ₽)')
+        : (p.price + ' ₽');
+    return {
+        id: String(p.id),
+        name: p.title || '',
+        main: p.main_image_url || p.cover_image_path || '',
+        images: Array.isArray(p.images) && p.images.length ? p.images : [p.main_image_url || p.cover_image_path || ''],
+        price: priceStr,
+        availability: p.is_available ? 'Доступен' : 'Недоступен',
+        description: p.description || 'Нет описания',
+        includedContent: p.included_content || '',
+        isCourse: true
+    };
+}
+
+function renderProductsGrid(productsList) {
+    const grid = document.getElementById('products-grid');
+    const loading = document.getElementById('catalog-loading');
+    const empty = document.getElementById('catalog-empty');
+    if (!grid) return;
+    loading.style.display = 'none';
+    if (!productsList || productsList.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+    grid.style.display = 'grid';
+    grid.innerHTML = '';
+    productsList.forEach(function(p) {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.onclick = function() { openModal(p.id); };
+        const imgSrc = p.main_image_url || p.cover_image_path || '';
+        const priceHtml = (p.discount && parseFloat(p.discount) > 0)
+            ? '<span class="product-old-price">' + (p.price || '') + ' ₽</span> ' + (p.final_price || p.price) + ' ₽ <span class="product-discount">-' + p.discount + '%</span>'
+            : (p.price || '') + ' ₽';
+        card.innerHTML = '<div class="product-image">' + (imgSrc ? '<img src="' + imgSrc + '" alt="' + (p.title || '').replace(/"/g, '&quot;') + '">' : 'Нет изображения') + '</div>' +
+            '<div class="product-info"><h3 class="product-name">' + (p.title || '').replace(/</g, '&lt;') + '</h3>' +
+            '<div class="product-price">' + priceHtml + '</div></div>';
+        grid.appendChild(card);
+    });
+}
+
+function loadCatalog() {
+    const params = getCatalogParams();
+    const qs = new URLSearchParams();
+    if (params.q) qs.set('q', params.q);
+    if (params.category) qs.set('category', params.category);
+    if (params.sort) qs.set('sort', params.sort);
+    if (params.page) qs.set('page', params.page);
+    fetch('/api/catalog/?' + qs.toString(), { method: 'GET', credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success || !data.products) {
+                document.getElementById('catalog-loading').textContent = 'Ошибка загрузки каталога';
+                return;
+            }
+            products = {};
+            data.products.forEach(function(p) {
+                products[String(p.id)] = buildProductFromApi(p);
+            });
+            renderProductsGrid(data.products);
+        })
+        .catch(function() {
+            document.getElementById('catalog-loading').textContent = 'Ошибка загрузки каталога';
+        });
+}
+
+document.addEventListener('DOMContentLoaded', loadCatalog);
+
+function openModal(id) {
+    const product = products[id];
+    if (!product) return;
+
+    document.getElementById("modalProductName").textContent = product.name;
+    document.getElementById("modalPrice").textContent = product.price;
+    document.getElementById("modalAvailability").textContent = "Наличие: " + (product.availability || "Доступен");
+    document.getElementById("modalDescription").textContent = "Описание: " + (product.description || "Нет описания");
+    const incEl = document.getElementById("modalIncludedContent");
+    if (incEl) {
+        incEl.textContent = product.includedContent ? "В состав входит: " + product.includedContent : "";
+        incEl.style.display = product.includedContent ? "block" : "none";
+    }
+
+    const mainImg = document.getElementById("modalMainImage");
+    const thumbnails = document.getElementById("modalThumbnails");
+    thumbnails.innerHTML = "";
+    
+    window.currentImages = [];
+    if (product.main) {
+        window.currentImages.push(product.main);
+    }
+    if (product.images && product.images.length > 0) {
+        product.images.forEach(url => {
+            if (url && !window.currentImages.includes(url)) {
+                window.currentImages.push(url);
+            }
+        });
+    }
+    
+    window.currentIndex = 0;
+    if (window.currentImages.length > 0) {
+        mainImg.src = window.currentImages[0];
+    }
+    
+    if (window.currentImages.length > 0) {
+        window.currentImages.forEach((url, index) => {
+            const img = document.createElement("img");
+            img.src = url;
+            if (index === 0) {
+                img.classList.add("active");
+            }
+            img.onclick = () => {
+                window.currentIndex = index;
+                updateActiveThumb();
+            };
+            thumbnails.appendChild(img);
+        });
+    }
+
+    const sizesBlock = document.getElementById("modalSizesBlock");
+    const sizeSelect = document.getElementById("modalSizeSelect");
+    if (product.isCourse) {
+        if (sizesBlock) sizesBlock.style.display = "none";
+        if (sizeSelect) sizeSelect.innerHTML = "";
+    } else if (product.sizes && product.sizes.length > 0) {
+        if (sizesBlock) sizesBlock.style.display = "block";
+        if (sizeSelect) {
+            sizeSelect.innerHTML = '<option value="" disabled selected>Выберите размер</option>';
+            product.sizes.forEach(size => {
+                const option = document.createElement("option");
+                option.value = size.id;
+                option.textContent = size.label + (size.stock === 0 ? " (Нет в наличии)" : "");
+                option.disabled = size.stock === 0;
+                sizeSelect.appendChild(option);
+            });
+        }
+    }
+
+    document.getElementById("sizeWarning").style.display = "none";
+    document.getElementById("productModal").style.display = "flex";
+    
+    // Обновляем состояние стрелок
+    updateArrowStates();
+    
+    // Загружаем отзывы
+    loadReviews(id);
+    
+    // Сбрасываем форму отзыва (если она существует)
+    const reviewRating = document.getElementById("reviewRating");
+    const reviewText = document.getElementById("reviewText");
+    if (reviewRating) reviewRating.value = "0";
+    if (reviewText) reviewText.value = "";
+    const starsInput = document.querySelectorAll(".stars-input .star");
+    if (starsInput.length > 0) {
+        starsInput.forEach(star => star.classList.remove("active"));
+    }
+    
+    // Сохраняем текущий productId для использования в функциях
+    window.currentProductId = String(id);
+    
+    // Проверяем состояние товара (в избранном/корзине) и обновляем кнопки
+    if (isAuthenticated) {
+        checkProductStatus(id);
+    } else {
+        // Если не авторизован, показываем стандартные кнопки
+        updateButtonStates(false, false);
+    }
+}
+
+function closeModal() { document.getElementById("productModal").style.display="none"; }
+
+function showSizeWarning(message) {
+    const warning = document.getElementById("sizeWarning");
+    warning.textContent = message;
+    warning.style.display = "block";
+}
+
+// Переменные для хранения состояния товара
+let productIsInCart = false;
+let productIsFavorite = false;
+let productIsPurchased = false;
+
+function checkProductStatus(productId) {
+    if (!isAuthenticated) {
+        updateButtonStates(false, false, false);
+        return;
+    }
+    fetch('/product/' + productId + '/status/', { method: 'GET', credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+            productIsInCart = !!data.is_in_cart;
+            productIsFavorite = !!data.is_favorite;
+            productIsPurchased = !!data.is_purchased;
+            updateButtonStates(productIsFavorite, productIsInCart, productIsPurchased);
+        })
+        .catch(() => {
+            updateButtonStates(false, false, false);
+        });
+}
+
+function updateButtonStates(isFavorite, isInCart, isPurchased) {
+    const favButton = document.getElementById("favButton");
+    const cartButton = document.getElementById("cartButton");
+    if (typeof isPurchased === 'undefined') isPurchased = false;
+
+    if (favButton) {
+        if (isFavorite) {
+            favButton.textContent = "Удалить из избранного";
+            favButton.classList.add("remove-fav");
+        } else {
+            favButton.textContent = "Добавить в избранное";
+            favButton.classList.remove("remove-fav");
+        }
+    }
+
+    if (cartButton) {
+        if (isPurchased) {
+            cartButton.textContent = "Уже куплен";
+            cartButton.disabled = true;
+            cartButton.classList.add("remove-cart");
+        } else if (isInCart) {
+            cartButton.textContent = "Удалить из корзины";
+            cartButton.disabled = false;
+            cartButton.classList.add("remove-cart");
+        } else {
+            cartButton.textContent = "Добавить в корзину";
+            cartButton.disabled = false;
+            cartButton.classList.remove("remove-cart");
+        }
+    }
+}
+
+function toggleCart() {
+    if (!isAuthenticated) {
+        alert("Пожалуйста, авторизуйтесь!");
+        return;
+    }
+    if (productIsPurchased) return;
+
+    const productId = window.currentProductId;
+    if (!productId) return;
+
+    if (productIsInCart) {
+        // Удаляем из корзины
+        removeFromCart(productId);
+    } else {
+        // Добавляем в корзину
+        addToCart();
+    }
+}
+
+function toggleFavorites() {
+    if (!isAuthenticated) {
+        alert("Пожалуйста, авторизуйтесь!");
+        return;
+    }
+    
+    const productId = window.currentProductId;
+    if (!productId) return;
+    
+    if (productIsFavorite) {
+        // Удаляем из избранного
+        removeFromFavorites(productId);
+    } else {
+        // Добавляем в избранное
+        addToFavorites(productId);
+    }
+}
+
+// Выносим getCookie наружу, чтобы использовать в разных функциях
+    function getCookie(name) {
+        let cookieValue = null;
+        if(document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for(let cookie of cookies){
+                cookie = cookie.trim();
+                if(cookie.startsWith(name + '=')){
+                    cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                    break;
+                }
+            }
+        }
+        if(!cookieValue){
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if(csrfInput) cookieValue = csrfInput.value;
+        }
+        return cookieValue;
+}
+
+function addToCart() {
+    const productId = window.currentProductId;
+    const product = products[productId];
+    const isCourse = product && product.isCourse;
+    
+    if (!isCourse) {
+        const sizeSelect = document.getElementById("modalSizeSelect");
+        const sizeId = sizeSelect ? sizeSelect.value : "";
+        if (!sizeId) { 
+            showSizeWarning("⚠ Пожалуйста, выберите размер!"); 
+            return; 
+        }
+    }
+    
+    const url = '/api/cart/';
+    const body = JSON.stringify({ course_id: parseInt(productId) });
+    
+    fetch(url, {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json", 
+            "X-CSRFToken": getCookie('csrftoken')
+        },
+        credentials: 'same-origin',
+        body: body
+    }).then(r => {
+        if (!r.ok) {
+            throw new Error(`HTTP error! status: ${r.status}`);
+        }
+        return r.json();
+    }).then(data => {
+        if (data.success) {
+            productIsInCart = true;
+            updateButtonStates(productIsFavorite, true);
+        } else {
+            console.error('Ошибка при добавлении в корзину:', data);
+            alert('Не удалось добавить в корзину: ' + (data.message || data.error || 'Неизвестная ошибка'));
+        }
+    }).catch(err => {
+        console.error('Ошибка при добавлении в корзину:', err);
+        if (err.message.includes('Failed to fetch') || err.message.includes('ERR_CONNECTION_REFUSED')) {
+            alert('Сервер недоступен. Убедитесь, что сервер запущен.');
+        } else {
+            alert('Ошибка при добавлении в корзину: ' + err.message);
+        }
+    });
+}
+
+function removeFromCart(productId) {
+    console.log('removeFromCart вызвана для productId:', productId);
+    
+    // Получаем cart item id из корзины
+    fetch('/api/cart/', {
+        method:"GET",
+        headers:{ "X-CSRFToken": getCookie('csrftoken') },
+        credentials: 'same-origin'
+    }).then(r=>{
+        if(!r.ok) {
+            throw new Error(`HTTP error! status: ${r.status}`);
+        }
+        return r.json();
+    }).then(cartData=>{
+        console.log('Данные корзины (полный объект):', JSON.stringify(cartData, null, 2));
+        
+        // Проверяем разные варианты структуры данных
+        let items = null;
+        
+        // Вариант 1: items напрямую в корне
+        if(Array.isArray(cartData.items)) {
+            items = cartData.items;
+        }
+        // Вариант 2: items вложены в cart
+        else if(cartData.cart && Array.isArray(cartData.cart.items)) {
+            items = cartData.cart.items;
+        }
+        // Вариант 3: items вложены в другой объект
+        else if(cartData.data && Array.isArray(cartData.data.items)) {
+            items = cartData.data.items;
+        }
+        // Вариант 4: проверяем все ключи объекта
+        else {
+            console.log('Ключи объекта cartData:', Object.keys(cartData));
+            for(let key in cartData) {
+                if(Array.isArray(cartData[key])) {
+                    console.log(`Найден массив в ключе "${key}":`, cartData[key]);
+                    // Проверяем, похоже ли это на массив элементов корзины
+                    if(cartData[key].length > 0 && (cartData[key][0].product || cartData[key][0].product_id)) {
+                        items = cartData[key];
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if(!items || !Array.isArray(items)) {
+            console.error('items не найден или не является массивом. Структура данных:', cartData);
+            // Не показываем alert, если items просто пустой массив (товар может быть не в корзине)
+            if(items === null) {
+                console.warn('Элементы корзины не найдены в ответе API');
+                alert('Не удалось получить элементы корзины. Возможно, товар уже удален из корзины.');
+            }
+            return;
+        }
+        
+        console.log('Найденные items:', items);
+        console.log('Ищем товар с productId:', productId, 'тип:', typeof productId);
+        
+        // Ищем все cart items для этого курса/товара (course_id или product_id)
+        const productIdNum = parseInt(productId);
+        const cartItems = items.filter(item => {
+            const itemCourseId = item.course_id ?? item.course;
+            const itemProductId1 = item.product;
+            const itemProductId2 = item.product_id;
+            const itemProductId3 = item.product?.id || item.product?.pk;
+            const id = typeof itemCourseId === 'object' ? (itemCourseId?.id ?? itemCourseId?.pk) : itemCourseId;
+            return (id === productIdNum || id === productId) ||
+                itemProductId1 === productIdNum || itemProductId1 === productId ||
+                itemProductId2 === productIdNum || itemProductId2 === productId ||
+                itemProductId3 === productIdNum || itemProductId3 === productId;
+        });
+        
+        console.log('Найдено элементов корзины для удаления:', cartItems.length, cartItems);
+        
+        if(cartItems.length > 0) {
+            // Удаляем все найденные элементы корзины для этого товара
+            const deletePromises = cartItems.map(cartItem => {
+                const itemId = cartItem.id || cartItem.pk;
+                console.log('Удаляем элемент корзины с ID:', itemId);
+                return fetch(`/api/cart/items/${itemId}/`, {
+                    method:"DELETE",
+                    headers:{ 
+                        "X-CSRFToken": getCookie('csrftoken'),
+                        "Content-Type": "application/json"
+                    },
+                    credentials: 'same-origin'
+                });
+            });
+            
+            Promise.all(deletePromises).then(responses => {
+                console.log('Ответы на удаление:', responses);
+                const allSuccess = responses.every(r => r.ok || r.status === 204 || r.status === 200);
+                if(allSuccess){
+                    productIsInCart = false;
+                    updateButtonStates(productIsFavorite, false);
+                } else {
+                    console.error('Не все элементы были удалены');
+                    alert('Ошибка при удалении товара из корзины.');
+                }
+            }).catch(err => {
+                console.error('Ошибка при удалении из корзины:', err);
+                alert('Ошибка при удалении товара из корзины. Проверьте консоль для деталей.');
+            });
+        } else {
+            console.warn('Элементы корзины для этого товара не найдены');
+        }
+    }).catch(err => {
+        console.error('Ошибка при получении корзины:', err);
+        if(err.message && (err.message.includes('Failed to fetch') || err.message.includes('ERR_CONNECTION_REFUSED'))) {
+            alert('Сервер недоступен. Убедитесь, что сервер Django запущен (python manage.py runserver).');
+        } else {
+            alert('Ошибка при получении корзины: ' + (err.message || 'Неизвестная ошибка'));
+        }
+    });
+}
+
+function addToFavorites(productId) {
+    if (!isAuthenticated) {
+        alert("Пожалуйста, авторизуйтесь!");
+        return;
+    }
+    
+    if (!productId) {
+        console.error('productId не указан');
+        alert('Ошибка: не указан ID товара');
+        return;
+    }
+    
+    const productIdNum = parseInt(productId);
+    if (isNaN(productIdNum)) {
+        console.error('Неверный productId:', productId);
+        alert('Ошибка: неверный ID товара');
+        return;
+    }
+    
+    fetch("/api/favorites/", {
+        method:"POST",
+        headers:{ 
+            "Content-Type":"application/json", 
+            "X-CSRFToken": getCookie('csrftoken')
+        },
+        credentials: 'same-origin',
+        body:JSON.stringify({ product_id: productIdNum })
+    }).then(async r=>{
+        const responseText = await r.text();
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            // Если ответ не JSON, создаем объект с ошибкой
+            console.error('Не удалось распарсить ответ как JSON:', responseText);
+            data = { error: `Ошибка сервера: ${r.status} ${r.statusText}`, raw: responseText };
+        }
+        
+        console.log('Ответ сервера:', data, 'Статус:', r.status);
+        
+        if(!r.ok) {
+            // Обработка различных форматов ошибок
+            let errorMsg = data.error || data.message;
+            
+            // DRF может возвращать ошибки в формате { "detail": "..." } или { "field": ["error"] }
+            if (data.detail) {
+                errorMsg = data.detail;
+            } else if (data.product_id && Array.isArray(data.product_id)) {
+                errorMsg = data.product_id.join(', ');
+            } else if (typeof data === 'object' && Object.keys(data).length > 0) {
+                // Если есть другие поля с ошибками
+                const errorFields = Object.keys(data).filter(k => k !== 'success');
+                if (errorFields.length > 0) {
+                    errorMsg = JSON.stringify(data);
+                }
+            }
+            
+            const error = new Error(errorMsg || `HTTP error! status: ${r.status}`);
+            error.responseData = data;
+            throw error;
+        }
+        return data;
+    }).then(data=>{
+        if(data.success){
+            productIsFavorite = true;
+            updateButtonStates(true, productIsInCart);
+        } else {
+            console.error('Ошибка при добавлении в избранное:', data);
+            alert('Не удалось добавить товар в избранное: ' + (data.error || data.message || 'Неизвестная ошибка'));
+        }
+    }).catch(err => {
+        console.error('Ошибка при добавлении в избранное:', err);
+        console.error('Данные ответа:', err.responseData);
+        
+        let errorMessage = err.message || 'Неизвестная ошибка';
+        
+        if(errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_CONNECTION_REFUSED')) {
+            alert('Сервер недоступен. Убедитесь, что сервер запущен.');
+        } else {
+            alert('Ошибка при добавлении товара в избранное: ' + errorMessage);
+        }
+    });
+}
+
+function removeFromFavorites(productId) {
+    if (!isAuthenticated) {
+        alert("Пожалуйста, авторизуйтесь!");
+        return;
+    }
+    
+    fetch(`/api/favorites/${parseInt(productId)}/`, {
+        method:"DELETE",
+        headers:{ "X-CSRFToken": getCookie('csrftoken') },
+        credentials: 'same-origin'
+    }).then(resp => {
+        if (resp.ok || resp.status === 204){
+            productIsFavorite = false;
+            updateButtonStates(false, productIsInCart);
+        } else if (resp.status === 401 || resp.status === 403) {
+            // Игнорируем ошибки аутентификации
+            return;
+        }
+    }).catch((err) => {
+        // Игнорируем ошибки для неавторизованных пользователей
+        if (isAuthenticated) {
+            console.error('Ошибка при удалении из избранного:', err);
+        }
+    });
+}
+
+window.onclick = function(event){ const modal=document.getElementById("productModal"); if(event.target==modal) modal.style.display="none"; }
+
+// Функции для работы с отзывами
+let currentProductId = null;
+let startX = null;
+
+function updateActiveThumb() {
+    const thumbnails = document.getElementById("modalThumbnails");
+    const mainImg = document.getElementById("modalMainImage");
+    const wrapper = document.querySelector(".modal-image-wrapper");
+    if (!window.currentImages || window.currentImages.length === 0) return;
+    
+    // Плавный переход
+    wrapper.classList.add("fade");
+    setTimeout(() => {
+        mainImg.src = window.currentImages[window.currentIndex];
+        wrapper.classList.remove("fade");
+    }, 200);
+    
+    // Обновляем активную миниатюру
+    thumbnails.querySelectorAll("img").forEach((el, idx) => {
+        el.classList.toggle("active", idx === window.currentIndex);
+    });
+    
+    // Обновляем состояние стрелок
+    updateArrowStates();
+}
+
+function updateArrowStates() {
+    const prevBtn = document.querySelector(".slider-arrow.prev");
+    const nextBtn = document.querySelector(".slider-arrow.next");
+    
+    if (!window.currentImages || window.currentImages.length <= 1) {
+        if (prevBtn) prevBtn.classList.add("disabled");
+        if (nextBtn) nextBtn.classList.add("disabled");
+    } else {
+        if (prevBtn) prevBtn.classList.remove("disabled");
+        if (nextBtn) nextBtn.classList.remove("disabled");
+    }
+}
+
+function prevImage() {
+    if (!window.currentImages || window.currentImages.length === 0) return;
+    window.currentIndex = (window.currentIndex - 1 + window.currentImages.length) % window.currentImages.length;
+    updateActiveThumb();
+}
+
+function nextImage() {
+    if (!window.currentImages || window.currentImages.length === 0) return;
+    window.currentIndex = (window.currentIndex + 1) % window.currentImages.length;
+    updateActiveThumb();
+}
+
+// Клавиатура: стрелки влево/вправо
+document.addEventListener("keydown", (e) => {
+    const modal = document.getElementById("productModal");
+    if (modal.style.display === "flex") {
+        if (e.key === "ArrowLeft") prevImage();
+        if (e.key === "ArrowRight") nextImage();
+        if (e.key === "Escape") closeModal();
+    }
+});
+
+// Свайп
+const mainImgEl = document.getElementById("modalMainImage");
+mainImgEl.addEventListener("touchstart", (e) => {
+    startX = e.touches[0].clientX;
+}, { passive: true });
+mainImgEl.addEventListener("touchend", (e) => {
+    if (startX === null) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) {
+        if (dx > 0) prevImage(); else nextImage();
+    }
+    startX = null;
+}, { passive: true });
+
+function loadReviews(productId) {
+    currentProductId = productId;
+    const reviewsList = document.getElementById("reviewsList");
+    reviewsList.innerHTML = "<p class='loading-reviews'>Загрузка отзывов...</p>";
+    
+    fetch(`/api/courses/${productId}/reviews/?limit=2`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                displayReviews(data, productId);
+            } else {
+                reviewsList.innerHTML = "<p>Ошибка загрузки отзывов</p>";
+            }
+        })
+        .catch(() => {
+            reviewsList.innerHTML = "<p>Ошибка загрузки отзывов</p>";
+        });
+}
+
+function displayReviews(data, productId) {
+    const avgRating = document.getElementById("avgRating");
+    const starsDisplay = document.getElementById("starsDisplay");
+    const reviewsCount = document.getElementById("reviewsCount");
+    const reviewsList = document.getElementById("reviewsList");
+    const reviewsContainer = document.getElementById("reviewsList");
+    
+    avgRating.textContent = data.avg_rating || "0.0";
+    reviewsCount.textContent = `(${data.total_reviews} ${data.total_reviews === 1 ? 'отзыв' : data.total_reviews < 5 ? 'отзыва' : 'отзывов'})`;
+    
+    // Отображаем звезды
+    starsDisplay.innerHTML = "";
+    const rating = Math.round(data.avg_rating || 0);
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement("span");
+        star.textContent = "★";
+        star.className = i <= rating ? "star-filled" : "star-empty";
+        starsDisplay.appendChild(star);
+    }
+    
+    // Отображаем список отзывов (максимум 2)
+    if (data.reviews.length === 0) {
+        let html = "<p class='no-reviews'>Пока нет отзывов. Будьте первым!</p>";
+        reviewsList.innerHTML = html;
+    } else {
+        reviewsList.innerHTML = "";
+        data.reviews.forEach(review => {
+            const reviewItem = document.createElement("div");
+            reviewItem.className = "review-item";
+            reviewItem.innerHTML = `
+                <div class="review-header">
+                    <span class="review-author">${review.user_name}</span>
+                    <div class="review-rating">
+                        ${"★".repeat(review.rating)}${"☆".repeat(5 - review.rating)}
+                    </div>
+                    <span class="review-date">${review.created_at}</span>
+                </div>
+                ${review.text ? `<div class="review-text">${review.text}</div>` : ""}
+            `;
+            reviewsList.appendChild(reviewItem);
+        });
+    }
+    
+    // Всегда добавляем кнопку "Посмотреть все отзывы" (для всех пользователей)
+    const viewAllButton = document.createElement("div");
+    viewAllButton.className = "reviews-more";
+    const links = [];
+    
+    // Кнопка "Посмотреть все отзывы" - всегда видна
+    links.push(`<a href="/product/${productId}/reviews/page/" class="btn-more-reviews">Посмотреть все отзывы →</a>`);
+    
+    // Кнопка "Написать отзыв" - только для авторизованных, которые могут писать
+    if (isAuthenticated && data.user_can_review) {
+        links.push(`<a href="/product/${productId}/reviews/page/" class="btn-more-reviews">Написать отзыв →</a>`);
+    }
+    
+    viewAllButton.innerHTML = links.join(" ");
+    reviewsList.appendChild(viewAllButton);
+}
+
+function setRating(rating) {
+    const reviewRating = document.getElementById("reviewRating");
+    if (reviewRating) reviewRating.value = rating;
+    document.querySelectorAll(".stars-input .star").forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add("active");
+        } else {
+            star.classList.remove("active");
+        }
+    });
+}
+
+function submitReview(event) {
+    event.preventDefault();
+    if (!isAuthenticated) {
+        alert("Пожалуйста, авторизуйтесь!");
+        return;
+    }
+    
+    const reviewRating = document.getElementById("reviewRating");
+    const reviewText = document.getElementById("reviewText");
+    
+    if (!reviewRating || !reviewText) {
+        return; // Форма отзывов не существует на этой странице
+    }
+    
+    const rating = parseInt(reviewRating.value);
+    const text = reviewText.value.trim();
+    
+    if (rating === 0) {
+        alert("Пожалуйста, выберите оценку!");
+        return;
+    }
+    
+    fetch(`/api/courses/${currentProductId}/reviews/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie('csrftoken')
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            rating: rating,
+            review_text: text
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert("Отзыв добавлен!");
+            reviewText.value = "";
+            reviewRating.value = "0";
+            document.querySelectorAll(".stars-input .star").forEach(star => star.classList.remove("active"));
+            loadReviews(currentProductId);
+        } else {
+            alert("Ошибка: " + (data.message || "Не удалось добавить отзыв"));
+        }
+    })
+    .catch(() => alert("Ошибка при отправке отзыва"));
+}
+</script>
+{% endblock %}

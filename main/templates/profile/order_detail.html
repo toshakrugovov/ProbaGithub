@@ -1,0 +1,520 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Детали заказа #{{ order.id }} - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+/* === Контейнер деталей заказа === */
+.order-detail-content {
+    padding: 60px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.order-detail-header {
+    margin-bottom: 30px;
+}
+
+.order-detail-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.order-detail-header a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.order-detail-header a:hover {
+    text-decoration: underline;
+}
+
+/* === Информация о заказе === */
+.order-info-card {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.order-info-section {
+    margin-bottom: 24px;
+}
+
+.order-info-section:last-child {
+    margin-bottom: 0;
+}
+
+.order-info-section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.info-label {
+    color: var(--text-color-secondary);
+    font-weight: 500;
+}
+
+.info-value {
+    font-weight: 600;
+}
+
+.order-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.order-status.processing {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.order-status.shipped {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.order-status.delivered {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.order-status.cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* === Товары в заказе === */
+.order-items-card {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.order-items-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-item {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-item-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+}
+
+.order-item-info {
+    flex: 1;
+}
+
+.order-item-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.order-item-details {
+    font-size: 14px;
+    color: var(--text-color-secondary);
+    margin-bottom: 8px;
+}
+
+.order-item-price {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.order-item-quantity {
+    font-size: 14px;
+    color: var(--text-color-secondary);
+}
+
+.order-item-total {
+    text-align: right;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* === Итого === */
+.order-summary {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.order-summary h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.summary-row.total {
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px solid var(--border-color);
+}
+
+.summary-label {
+    color: var(--text-color-secondary);
+}
+
+.summary-value {
+    font-weight: 600;
+}
+
+/* Темная тема */
+.dark-theme .order-info-card,
+.dark-theme .order-items-card,
+.dark-theme .order-summary {
+    background-color: #1a1a1a;
+    border-color: #333;
+}
+
+.dark-theme .order-item-image {
+    background-color: #2a2a2a;
+}
+
+.dark-theme .order-status.processing,
+.dark-theme .order-status.shipped,
+.dark-theme .order-status.delivered,
+.dark-theme .order-status.cancelled {
+    background-color: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--input-border);
+}
+
+/* Адаптив */
+@media (max-width: 768px) {
+    .order-detail-content {
+        padding: 40px 15px;
+    }
+    
+    .info-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+    
+    .order-item {
+        flex-direction: column;
+    }
+    
+    .order-item-image {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .order-item-total {
+        text-align: left;
+        margin-top: 12px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-detail-content" data-order-id="{{ order_id }}">
+    <div class="order-detail-header">
+        <h1 id="order-title">Заказ</h1>
+        <a href="{% url 'order_history' %}">← Вернуться к заказам</a>
+    </div>
+
+    <div id="order-loading" class="order-info-card">
+        <div class="order-info-section">
+            <h3>Информация о заказе</h3>
+            <p>Загрузка данных заказа...</p>
+        </div>
+    </div>
+
+    <div id="order-error" class="order-info-card" style="display:none;">
+        <div class="order-info-section">
+            <h3>Ошибка</h3>
+            <p id="order-error-text">Не удалось загрузить данные заказа.</p>
+        </div>
+    </div>
+
+    <!-- Информация о заказе -->
+    <div class="order-info-card" id="order-info" style="display:none;">
+        <div class="order-info-section">
+            <h3>Информация о заказе</h3>
+            <div class="info-row">
+                <div class="info-label">Номер заказа:</div>
+                <div class="info-value" id="order-number">#</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Дата заказа:</div>
+                <div class="info-value" id="order-date"></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Статус:</div>
+                <div>
+                    <div class="order-status" id="order-status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Товары в заказе -->
+    <div class="order-items-card" id="order-items-card" style="display:none;">
+        <h3>Товары в заказе</h3>
+        <div id="order-items"></div>
+    </div>
+
+    <!-- Итого -->
+    <div class="order-summary" id="order-summary" style="display:none;">
+        <h3>Итого</h3>
+        <div class="summary-row total">
+            <div class="summary-label">Сумма заказа:</div>
+            <div class="summary-value" id="order-total">0 ₽</div>
+        </div>
+    </div>
+
+    <!-- Кнопка отмены заказа -->
+    <div style="margin-top: 24px; text-align: center;">
+        <button type="button" id="cancel-order-btn" class="btn btn-danger" style="padding: 12px 24px; font-size: 16px; display:none;">
+            Отменить заказ
+        </button>
+    </div>
+</div>
+
+<script>
+const ORDER_ID = parseInt(document.querySelector('.order-detail-content')?.dataset.orderId || '0', 10);
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
+        }
+    }
+    if (!cookieValue) {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput) cookieValue = csrfInput.value;
+    }
+    return cookieValue;
+}
+
+function formatOrderDate(iso) {
+    try {
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso || '';
+        return d.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        return iso || '';
+    }
+}
+
+function getOrderStatusLabel(status) {
+    switch (status) {
+        case 'processing': return 'В обработке';
+        case 'paid': return 'Оплачен';
+        case 'shipped': return 'Отправлен';
+        case 'delivered': return 'Доставлен';
+        case 'cancelled': return 'Отменен';
+        default: return status || '';
+    }
+}
+
+function renderOrder(order) {
+    const loadingEl = document.getElementById('order-loading');
+    const infoEl = document.getElementById('order-info');
+    const itemsCardEl = document.getElementById('order-items-card');
+    const itemsEl = document.getElementById('order-items');
+    const summaryEl = document.getElementById('order-summary');
+    const cancelBtn = document.getElementById('cancel-order-btn');
+
+    loadingEl.style.display = 'none';
+
+    document.getElementById('order-title').textContent = 'Заказ #' + order.id;
+    document.getElementById('order-number').textContent = '#' + order.id;
+    document.getElementById('order-date').textContent = formatOrderDate(order.created_at);
+
+    const status = order.order_status || '';
+    const statusLabel = getOrderStatusLabel(status);
+    const statusEl = document.getElementById('order-status');
+    statusEl.textContent = statusLabel;
+    statusEl.className = 'order-status ' + status;
+
+    const total = order.total_amount != null ? parseFloat(order.total_amount).toFixed(0) : '0';
+    document.getElementById('order-total').textContent = total + ' ₽';
+
+    const items = Array.isArray(order.items) ? order.items : [];
+    itemsEl.innerHTML = '';
+    if (items.length) {
+        items.forEach(function(item) {
+            const unitPrice = parseFloat(item.unit_price || 0);
+            const qty = parseInt(item.quantity || 1, 10);
+            const subtotal = (unitPrice * qty).toFixed(0);
+            const title = item.course ? ('Курс #' + item.course) : 'Курс';
+            const div = document.createElement('div');
+            div.className = 'order-item';
+            div.innerHTML =
+                '<div><div class="order-item-image" style="display:flex;align-items:center;justify-content:center;color:var(--text-color-secondary);">Курс</div></div>' +
+                '<div class="order-item-info">' +
+                    '<div class="order-item-name">' + title + '</div>' +
+                    '<div class="order-item-details"></div>' +
+                    '<div class="order-item-price">' + unitPrice.toFixed(0) + ' ₽</div>' +
+                    '<div class="order-item-quantity">Количество: ' + qty + '</div>' +
+                '</div>' +
+                '<div class="order-item-total">' + subtotal + ' ₽</div>';
+            itemsEl.appendChild(div);
+        });
+    } else {
+        itemsEl.innerHTML = '<p>Товары заказа не найдены.</p>';
+    }
+
+    infoEl.style.display = 'block';
+    itemsCardEl.style.display = 'block';
+    summaryEl.style.display = 'block';
+
+    if (order.can_be_cancelled || order.can_cancel) {
+        cancelBtn.style.display = 'inline-block';
+    } else {
+        cancelBtn.style.display = 'none';
+    }
+}
+
+async function loadOrder() {
+    const loadingEl = document.getElementById('order-loading');
+    const errorEl = document.getElementById('order-error');
+    const errorTextEl = document.getElementById('order-error-text');
+    loadingEl.style.display = 'block';
+    errorEl.style.display = 'none';
+
+    try {
+        const resp = await fetch('/api/orders/' + ORDER_ID + '/', {
+            method: 'GET',
+            credentials: 'same-origin'
+        });
+        if (resp.status === 401) {
+            loadingEl.style.display = 'none';
+            errorEl.style.display = 'block';
+            errorTextEl.textContent = 'Необходимо войти в систему, чтобы просмотреть заказ.';
+            return;
+        }
+        if (!resp.ok) {
+            loadingEl.style.display = 'none';
+            errorEl.style.display = 'block';
+            errorTextEl.textContent = 'Заказ не найден или недоступен.';
+            return;
+        }
+        const data = await resp.json();
+        renderOrder(data);
+    } catch (e) {
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorTextEl.textContent = 'Ошибка загрузки заказа. Попробуйте позже.';
+        console.error('Ошибка загрузки заказа', e);
+    }
+}
+
+async function cancelOrder() {
+    if (!confirm('Вы уверены, что хотите отменить заказ? Деньги будут возвращены согласно правилам, доступ к курсам будет отзыван.')) {
+        return;
+    }
+    try {
+        const resp = await fetch('/api/orders/' + ORDER_ID + '/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({})
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.success === false) {
+            alert(data.error || data.message || 'Не удалось отменить заказ');
+            return;
+        }
+        alert('Заказ отменен.');
+        window.location.reload();
+    } catch (e) {
+        alert('Ошибка при отмене заказа. Попробуйте позже.');
+        console.error('Ошибка отмены заказа', e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadOrder();
+    document.getElementById('cancel-order-btn').addEventListener('click', cancelOrder);
+});
+</script>
+
+<style>
+.btn-danger {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+    border: 1px solid var(--btn-bg);
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-danger:hover { opacity: 0.92; }
+</style>
+{% endblock %}
+

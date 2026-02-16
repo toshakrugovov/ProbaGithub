@@ -1,0 +1,167 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Категории и бренды - MPTCOURSE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'admin_dashboard' %}" class="table-actions-header a">← Назад</a>
+    </div>
+    <div class="dashboard-header">
+        <h1>Категории и бренды</h1>
+    </div>
+
+    <div class="sections-grid">
+        <div class="section-box">
+            <div class="section-header">
+                <h2>Категории</h2>
+                <div style="display: flex; gap: 8px;">
+                    <a href="{% url 'admin_category_add' %}">+ Добавить</a>
+                    <button type="button" class="btn" onclick="document.getElementById('importForm').style.display='block'" style="padding: 4px 12px; font-size: 12px;">Импорт CSV</button>
+                    <button type="button" class="btn btn-danger" id="deleteSelectedCategoriesBtn" onclick="deleteSelectedCategories()" disabled style="opacity: 0.5; padding: 4px 12px; font-size: 12px;">Удалить выбранные</button>
+                </div>
+            </div>
+            
+            <!-- Форма импорта CSV -->
+            <div id="importForm" style="display: none; background: var(--bg-color); padding: 16px; border-radius: 8px; margin: 12px 0; border: 1px solid var(--border-color);">
+                <h3 style="margin-top: 0; font-size: 14px;">Импорт категорий из CSV</h3>
+                <p style="font-size: 11px; color: var(--text-color-secondary); margin-bottom: 12px;">
+                    Формат CSV: category_name, category_description, parent_category<br>
+                    Пример: "Категория 1", "Описание категории", "Родительская категория"
+                </p>
+                <form method="post" action="{% url 'admin_categories_import_csv' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="file" name="csv_file" accept=".csv" required style="margin-bottom: 8px; display: block; font-size: 12px;">
+                    <div style="display: flex; gap: 8px;">
+                        <button type="submit" class="btn" style="padding: 6px 12px; font-size: 12px;">Импортировать</button>
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('importForm').style.display='none'" style="padding: 6px 12px; font-size: 12px;">Отмена</button>
+                    </div>
+                </form>
+            </div>
+            <ul class="section-list">
+                {% for category in categories %}
+                <li class="section-item">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" class="category-checkbox" value="{{ category.id }}" onchange="updateDeleteCategoriesButton()" style="width: 18px; height: 18px;">
+                        <div>
+                            <strong>{{ category.category_name }}</strong>
+                            {% if category.parent_category %}
+                            <span style="color: var(--text-color-secondary); font-size: 12px;">({{ category.parent_category.category_name }})</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="section-item-actions">
+                        <a href="{% url 'admin_category_edit' category_id=category.id %}">Изменить</a>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="section-item">Нет категорий</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="section-box">
+            <div class="section-header">
+                <h2>Бренды</h2>
+                <a href="{% url 'admin_brand_add' %}">+ Добавить</a>
+            </div>
+            <ul class="section-list">
+                {% for brand in brands %}
+                <li class="section-item">
+                    <div>
+                        <strong>{{ brand.brand_name }}</strong>
+                        {% if brand.brand_country %}
+                        <span style="color: var(--text-color-secondary); font-size: 12px;">({{ brand.brand_country }})</span>
+                        {% endif %}
+                    </div>
+                    <div class="section-item-actions">
+                        <a href="{% url 'admin_brand_edit' brand_id=brand.id %}">Изменить</a>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="section-item">Нет брендов</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function updateDeleteCategoriesButton() {
+    const checked = document.querySelectorAll('.category-checkbox:checked');
+    const deleteBtn = document.getElementById('deleteSelectedCategoriesBtn');
+    if (checked.length > 0) {
+        deleteBtn.disabled = false;
+        deleteBtn.style.opacity = '1';
+        deleteBtn.textContent = `Удалить выбранные (${checked.length})`;
+    } else {
+        deleteBtn.disabled = true;
+        deleteBtn.style.opacity = '0.5';
+        deleteBtn.textContent = 'Удалить выбранные';
+    }
+}
+
+function deleteSelectedCategories() {
+    const checked = document.querySelectorAll('.category-checkbox:checked');
+    if (checked.length === 0) {
+        alert('Выберите хотя бы одну категорию для удаления');
+        return;
+    }
+    
+    const ids = Array.from(checked).map(cb => parseInt(cb.value));
+    const count = ids.length;
+    
+    if (!confirm(`Вы уверены, что хотите удалить ${count} категори${count === 1 ? 'ю' : count < 5 ? 'и' : 'й'}?`)) {
+        return;
+    }
+    
+    fetch('/api/management/categories/', {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ ids: ids })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Успешно удалено: ${data.deleted_count} категори${data.deleted_count === 1 ? 'я' : data.deleted_count < 5 ? 'и' : 'й'}`);
+            if (data.errors && data.errors.length > 0) {
+                console.warn('Ошибки при удалении:', data.errors);
+            }
+            location.reload();
+        } else {
+            alert('Ошибка: ' + (data.error || 'Не удалось удалить категории'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при массовом удалении категорий');
+    });
+}
+</script>
+{% endblock %}
+

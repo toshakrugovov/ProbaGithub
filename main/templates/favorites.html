@@ -1,0 +1,214 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}MPTCOURSE - Избранное{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/favorites.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="products-section">
+    {% if user.is_authenticated %}
+        <h2>Ваши избранные курсы</h2>
+        {% if favorites %}
+            <div class="products-grid">
+                {% for fav in favorites %}
+                    <div class="product-card">
+                        <div class="product-image">
+                            {% if fav.course.main_image_url %}
+                                <img src="{{ fav.course.main_image_url }}" alt="{{ fav.course.title }}">
+                            {% else %}
+                                Нет изображения
+                            {% endif %}
+                        </div>
+                        <div class="product-info">
+                            <h3>{{ fav.course.title }}</h3>
+                            <div class="product-price">
+                                {% if fav.course.discount and fav.course.discount > 0 %}
+                                    <span class="product-old-price">{{ fav.course.price }} ₽</span>
+                                    {{ fav.course.final_price|floatformat:0 }} ₽
+                                    <span class="product-discount">-{{ fav.course.discount }}%</span>
+                                {% else %}
+                                    {{ fav.course.price }} ₽
+                                {% endif %}
+                            </div>
+                            <div class="product-actions">
+                                <button type="button" class="btn-add-cart" onclick="addToCart({{ fav.course.id }}, event)">
+                                    <span class="btn-text">В корзину</span>
+                                </button>
+                                <button type="button" class="btn-remove-fav" onclick="removeFromFavorites({{ fav.course.id }}, event)">
+                                    <span class="btn-text">Удалить</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>У вас пока нет курсов в избранном.</p>
+        {% endif %}
+    {% else %}
+        <p>Пожалуйста, <a href="{% url 'login' %}">войдите в аккаунт</a>, чтобы просматривать избранное.</p>
+    {% endif %}
+</section>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if(document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for(let cookie of cookies){
+            cookie = cookie.trim();
+            if(cookie.startsWith(name + '=')){
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
+        }
+    }
+    if(!cookieValue){
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if(csrfInput) cookieValue = csrfInput.value;
+    }
+    return cookieValue;
+}
+
+async function addToCart(productId, event) {
+    const button = event.target.closest('.btn-add-cart');
+    const originalText = button.innerHTML;
+    
+    // Показываем состояние загрузки
+    button.disabled = true;
+    button.innerHTML = '<span class="btn-text">Добавление...</span>';
+    button.style.opacity = '0.7';
+    
+    try {
+        const response = await fetch('/api/cart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ 
+                product_id: parseInt(productId), 
+                quantity: 1 
+            })
+        });
+        
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            result = { success: false, error: 'Ошибка при обработке ответа сервера' };
+        }
+        
+        if (result.success) {
+            showNotification('Товар добавлен в корзину!', 'success');
+            // Анимация успеха
+            button.innerHTML = '<span class="btn-text">Добавлено!</span>';
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+                button.style.opacity = '1';
+            }, 1500);
+        } else {
+            // Если нужен размер, показываем более понятное сообщение
+            const errorMsg = result.error || 'Ошибка при добавлении в корзину';
+            if (errorMsg.includes('размер') || errorMsg.includes('size')) {
+                showNotification('Для добавления в корзину выберите размер товара на странице товара', 'error');
+            } else {
+                showNotification(errorMsg, 'error');
+            }
+            button.disabled = false;
+            button.innerHTML = originalText;
+            button.style.opacity = '1';
+        }
+    } catch(err) {
+        showNotification('Ошибка соединения: ' + err.message, 'error');
+        button.disabled = false;
+        button.innerHTML = originalText;
+        button.style.opacity = '1';
+    }
+}
+
+async function removeFromFavorites(productId, event) {
+    const button = event.target.closest('.btn-remove-fav');
+    const card = button.closest('.product-card');
+    const originalText = button.innerHTML;
+    
+    // Показываем состояние загрузки
+    button.disabled = true;
+    button.innerHTML = '<span class="btn-text">Удаление...</span>';
+    button.style.opacity = '0.7';
+    
+    try {
+        const response = await fetch(`/api/favorites/${productId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (response.ok || response.status === 204) {
+            showNotification('Товар удален из избранного', 'success');
+            // Плавное исчезновение карточки
+            card.style.transition = 'all 0.3s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                card.remove();
+                // Если карточек не осталось, показываем сообщение
+                const grid = document.querySelector('.products-grid');
+                if (grid && grid.children.length === 0) {
+                    grid.parentElement.innerHTML = '<p>У вас пока нет товаров в избранном.</p>';
+                }
+            }, 300);
+        } else {
+            const result = await response.json();
+            showNotification(result.error || 'Ошибка при удалении из избранного', 'error');
+            button.disabled = false;
+            button.innerHTML = originalText;
+            button.style.opacity = '1';
+        }
+    } catch(err) {
+        showNotification('Ошибка соединения: ' + err.message, 'error');
+        button.disabled = false;
+        button.innerHTML = originalText;
+        button.style.opacity = '1';
+    }
+}
+
+// Функция для показа красивых уведомлений
+function showNotification(message, type = 'info') {
+    // Удаляем предыдущее уведомление, если есть
+    const existing = document.querySelector('.notification');
+    if (existing) {
+        existing.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <span class="notification-message">${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Анимация появления
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    // Автоматическое скрытие через 3 секунды
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+</script>
+{% endblock %}
